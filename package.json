@@ -1,0 +1,50 @@
+{
+  "name": "speaker-landing",
+  "version": "0.1.0",
+  "description": "Landing page giới thiệu loa để bàn cao cấp (Next.js + R3F + GSAP)",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "placeholders": "node scripts/make-placeholders.mjs",
+    "capture": "node scripts/capture.mjs",
+    "verify": "node scripts/verify.mjs",
+    "lighthouse": "node scripts/lighthouse.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devhontran/landing-prompt.git"
+  },
+  "author": "",
+  "bugs": {
+    "url": "https://github.com/devhontran/landing-prompt/issues"
+  },
+  "homepage": "https://github.com/devhontran/landing-prompt#readme",
+  "dependencies": {
+    "@react-three/fiber": "^9.8.1",
+    "gsap": "^3.15.0",
+    "next": "^16.3.6",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.186.0",
+    "chrome-launcher": "^1.2.1",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.6",
+    "lighthouse": "^13.5.0",
+    "playwright": "1.56",
+    "sharp": "^0.35.4",
+    "typescript": "^6.0.3"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=20.9"
+  }
+}

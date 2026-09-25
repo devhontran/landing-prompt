@@ -1,0 +1,553 @@
+{
+  "base": "http://localhost:3200",
+  "date": "2026-09-25T15:13:47.400Z",
+  "checks": [
+    {
+      "name": "Header bảo mật có mặt, không lộ X-Powered-By",
+      "pass": true,
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self' blob:; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+    },
+    {
+      "name": "Tài nguyên tĩnh /_next/static có cache immutable",
+      "pass": true,
+      "asset": "/_next/static/chunks/2zynomd7rkcis.js",
+      "cache": "public, max-age=31536000, immutable"
+    },
+    {
+      "name": "HTML không chứa chuỗi giống khóa bí mật",
+      "pass": true
+    },
+    {
+      "name": "[1440x900] 0%: chương \"hero\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "hero"
+      ],
+      "drawCalls": 1,
+      "triangles": 12
+    },
+    {
+      "name": "[1440x900] 14%: chương \"back\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "back"
+      ],
+      "drawCalls": 26,
+      "triangles": 13860
+    },
+    {
+      "name": "[1440x900] 24%: chương \"back\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "back"
+      ],
+      "drawCalls": 26,
+      "triangles": 13860
+    },
+    {
+      "name": "[1440x900] 42%: chương \"blueprint\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "blueprint",
+        "blueprint",
+        "blueprint",
+        "blueprint",
+        "blueprint"
+      ],
+      "drawCalls": 66,
+      "triangles": 24390
+    },
+    {
+      "name": "[1440x900] 47%: chương \"blueprint\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "blueprint",
+        "blueprint",
+        "blueprint",
+        "blueprint",
+        "blueprint",
+        "blueprint",
+        "blueprint"
+      ],
+      "drawCalls": 66,
+      "triangles": 24390
+    },
+    {
+      "name": "[1440x900] 63%: chương \"driver\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "driver"
+      ],
+      "drawCalls": 53,
+      "triangles": 21658
+    },
+    {
+      "name": "[1440x900] 75%: chương \"pcb\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "pcb"
+      ],
+      "drawCalls": 55,
+      "triangles": 23182
+    },
+    {
+      "name": "[1440x900] 86%: chương \"enclosure\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "enclosure"
+      ],
+      "drawCalls": 49,
+      "triangles": 17802
+    },
+    {
+      "name": "[1440x900] 97%: chương \"final\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "final"
+      ],
+      "drawCalls": 27,
+      "triangles": 13862
+    },
+    {
+      "name": "[1440x900] 100%: chương \"final\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "final"
+      ],
+      "drawCalls": 27,
+      "triangles": 13862
+    },
+    {
+      "name": "[1440x900] Chữ không chồng lên khung bao model, không tràn ngang",
+      "pass": true,
+      "issues": []
+    },
+    {
+      "name": "[1440x900] Cuộn ngược khôi phục đúng trạng thái trước đó",
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "[1440x900] Nhảy từ cuối về đầu trả lại đúng hero",
+      "pass": true,
+      "jumpDiff": []
+    },
+    {
+      "name": "[1440x900] Không có lỗi JS/console",
+      "pass": true,
+      "errors": []
+    },
+    {
+      "name": "[1280x720] 0%: chương \"hero\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "hero"
+      ],
+      "drawCalls": 0,
+      "triangles": 0
+    },
+    {
+      "name": "[1280x720] 14%: chương \"back\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "back"
+      ],
+      "drawCalls": 26,
+      "triangles": 13860
+    },
+    {
+      "name": "[1280x720] 24%: chương \"back\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "back"
+      ],
+      "drawCalls": 26,
+      "triangles": 13860
+    },
+    {
+      "name": "[1280x720] 42%: chương \"blueprint\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "blueprint",
+        "blueprint",
+        "blueprint",
+        "blueprint",
+        "blueprint"
+      ],
+      "drawCalls": 66,
+      "triangles": 24390
+    },
+    {
+      "name": "[1280x720] 47%: chương \"blueprint\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "blueprint",
+        "blueprint",
+        "blueprint",
+        "blueprint",
+        "blueprint",
+        "blueprint",
+        "blueprint"
+      ],
+      "drawCalls": 66,
+      "triangles": 24390
+    },
+    {
+      "name": "[1280x720] 63%: chương \"driver\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "driver"
+      ],
+      "drawCalls": 53,
+      "triangles": 21658
+    },
+    {
+      "name": "[1280x720] 75%: chương \"pcb\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "pcb"
+      ],
+      "drawCalls": 55,
+      "triangles": 23182
+    },
+    {
+      "name": "[1280x720] 86%: chương \"enclosure\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "enclosure"
+      ],
+      "drawCalls": 49,
+      "triangles": 17802
+    },
+    {
+      "name": "[1280x720] 97%: chương \"final\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "final"
+      ],
+      "drawCalls": 27,
+      "triangles": 13862
+    },
+    {
+      "name": "[1280x720] 100%: chương \"final\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "final"
+      ],
+      "drawCalls": 27,
+      "triangles": 13862
+    },
+    {
+      "name": "[1280x720] Chữ không chồng lên khung bao model, không tràn ngang",
+      "pass": true,
+      "issues": []
+    },
+    {
+      "name": "[1280x720] Cuộn ngược khôi phục đúng trạng thái trước đó",
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "[1280x720] Nhảy từ cuối về đầu trả lại đúng hero",
+      "pass": true,
+      "jumpDiff": []
+    },
+    {
+      "name": "[1280x720] Không có lỗi JS/console",
+      "pass": true,
+      "errors": []
+    },
+    {
+      "name": "[1920x1080] 0%: chương \"hero\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "hero"
+      ],
+      "drawCalls": 1,
+      "triangles": 12
+    },
+    {
+      "name": "[1920x1080] 14%: chương \"back\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "back"
+      ],
+      "drawCalls": 26,
+      "triangles": 13860
+    },
+    {
+      "name": "[1920x1080] 24%: chương \"back\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "back"
+      ],
+      "drawCalls": 26,
+      "triangles": 13860
+    },
+    {
+      "name": "[1920x1080] 42%: chương \"blueprint\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "blueprint",
+        "blueprint",
+        "blueprint",
+        "blueprint",
+        "blueprint"
+      ],
+      "drawCalls": 66,
+      "triangles": 24390
+    },
+    {
+      "name": "[1920x1080] 47%: chương \"blueprint\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "blueprint",
+        "blueprint",
+        "blueprint",
+        "blueprint",
+        "blueprint",
+        "blueprint",
+        "blueprint"
+      ],
+      "drawCalls": 66,
+      "triangles": 24390
+    },
+    {
+      "name": "[1920x1080] 63%: chương \"driver\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "driver"
+      ],
+      "drawCalls": 53,
+      "triangles": 21658
+    },
+    {
+      "name": "[1920x1080] 75%: chương \"pcb\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "pcb"
+      ],
+      "drawCalls": 55,
+      "triangles": 23182
+    },
+    {
+      "name": "[1920x1080] 86%: chương \"enclosure\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "enclosure"
+      ],
+      "drawCalls": 49,
+      "triangles": 17802
+    },
+    {
+      "name": "[1920x1080] 97%: chương \"final\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "final"
+      ],
+      "drawCalls": 27,
+      "triangles": 13862
+    },
+    {
+      "name": "[1920x1080] 100%: chương \"final\" hiển thị & trạng thái 3D đúng",
+      "pass": true,
+      "visible": [
+        "final"
+      ],
+      "drawCalls": 27,
+      "triangles": 13862
+    },
+    {
+      "name": "[1920x1080] Chữ không chồng lên khung bao model, không tràn ngang",
+      "pass": true,
+      "issues": []
+    },
+    {
+      "name": "[1920x1080] Cuộn ngược khôi phục đúng trạng thái trước đó",
+      "pass": true,
+      "diffs": []
+    },
+    {
+      "name": "[1920x1080] Nhảy từ cuối về đầu trả lại đúng hero",
+      "pass": true,
+      "jumpDiff": []
+    },
+    {
+      "name": "[1920x1080] Không có lỗi JS/console",
+      "pass": true,
+      "errors": []
+    },
+    {
+      "name": "Gallery kéo được bằng chuột",
+      "pass": true,
+      "before": 0,
+      "after": -0.790509894574793
+    },
+    {
+      "name": "Gallery lặp liên tục (không lộ khoảng trống lớn sau nhiều vòng kéo)",
+      "pass": true,
+      "maxGap": 37.8125,
+      "reach": 1689.2874755859375,
+      "width": 1440,
+      "H": 630,
+      "offset": -14.418563294119195
+    },
+    {
+      "name": "Gallery điều khiển được bằng phím mũi tên",
+      "pass": true,
+      "k0": -14.426444646871825,
+      "k1": -14.906444646871826
+    },
+    {
+      "name": "FPS khi cuộn toàn bộ phần kể chuyện (1440×900)",
+      "pass": true,
+      "avgFps": 9.6,
+      "p95FrameMs": 316.6,
+      "frames": 416,
+      "seconds": 43.4,
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "note": "9.6 fps trung bình, p95 316.6 ms — renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    },
+    {
+      "name": "Mobile: không tải three.js / model 3D, không có canvas",
+      "pass": true,
+      "three": false,
+      "canvas": 0,
+      "mode": "static",
+      "overflowX": 0,
+      "heroImg": {
+        "complete": true,
+        "w": 390,
+        "src": "http://localhost:3200/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fhero.03ilvlomj"
+      },
+      "buttons": [
+        [
+          113,
+          44
+        ],
+        [
+          130,
+          48
+        ],
+        [
+          188,
+          48
+        ],
+        [
+          343,
+          58
+        ]
+      ],
+      "glb": [],
+      "jsKB": 137
+    },
+    {
+      "name": "Mobile: ảnh hero tải được, không tràn ngang",
+      "pass": true,
+      "complete": true,
+      "w": 390,
+      "src": "http://localhost:3200/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fhero.03ilvlomj"
+    },
+    {
+      "name": "Mobile: nút bấm ≥ 44×44 px",
+      "pass": true,
+      "buttons": [
+        [
+          113,
+          44
+        ],
+        [
+          130,
+          48
+        ],
+        [
+          188,
+          48
+        ],
+        [
+          343,
+          58
+        ]
+      ]
+    },
+    {
+      "name": "Giảm chuyển động: không 3D, nội dung hiện ngay, không animation",
+      "pass": true,
+      "three": false,
+      "canvas": 0,
+      "hidden": 0,
+      "anims": 0
+    },
+    {
+      "name": "Bàn phím: thứ tự Tab hợp lý, có viền focus",
+      "pass": true,
+      "seq": [
+        {
+          "tag": "A",
+          "text": "Bỏ qua đến nội dung",
+          "outline": true
+        },
+        {
+          "tag": "A",
+          "text": "Bỏ qua phần trình diễn, đến thư viện ảnh",
+          "outline": true
+        },
+        {
+          "tag": "A",
+          "text": "Loa để bàn",
+          "outline": true
+        },
+        {
+          "tag": "A",
+          "text": "Thiết kế",
+          "outline": true
+        },
+        {
+          "tag": "A",
+          "text": "Thông số",
+          "outline": true
+        },
+        {
+          "tag": "A",
+          "text": "Cấu tạo",
+          "outline": true
+        },
+        {
+          "tag": "A",
+          "text": "Thư viện",
+          "outline": true
+        },
+        {
+          "tag": "A",
+          "text": "Mua ngay",
+          "outline": true
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Ảnh trước",
+          "outline": true
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Ảnh tiếp theo",
+          "outline": true
+        },
+        {
+          "tag": "DIV",
+          "text": "Các góc nhìn sản phẩm",
+          "outline": true
+        },
+        {
+          "tag": "A",
+          "text": "Mua ngay",
+          "outline": true
+        }
+      ]
+    },
+    {
+      "name": "Điều hướng \"Thông số\" đưa tới cảnh bản vẽ",
+      "pass": true,
+      "lines": 1
+    }
+  ]
+}
