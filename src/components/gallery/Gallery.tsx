@@ -22,6 +22,7 @@ export function Gallery() {
   const gl = mode === '3d'
   const viewportRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const cursorRef = useRef<HTMLDivElement>(null)
   const tilesRef = useRef<HTMLLIElement[]>([])
   const engine = useRef({ target: 0, current: 0, nudge: (d: number) => void d })
   const [glFailed, setGlFailed] = useState(false)
@@ -196,6 +197,41 @@ export function Gallery() {
     }
   }, [gl])
 
+  // Con trỏ "Kéo": bám theo chuột bằng lerp, chỉ chạy vòng rAF khi đang hover.
+  useEffect(() => {
+    if (!gl) return
+    const vp = viewportRef.current!
+    const cur = cursorRef.current!
+    const p = { x: 0, y: 0, tx: 0, ty: 0 }
+    let raf = 0
+    const loop = () => {
+      p.x += (p.tx - p.x) * 0.2
+      p.y += (p.ty - p.y) * 0.2
+      cur.style.transform = `translate3d(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px, 0)`
+      raf = Math.abs(p.tx - p.x) + Math.abs(p.ty - p.y) > 0.3 ? requestAnimationFrame(loop) : 0
+    }
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse') return
+      const r = vp.getBoundingClientRect()
+      p.tx = e.clientX - r.left
+      p.ty = e.clientY - r.top
+      if (!vp.dataset.cursor) {
+        p.x = p.tx
+        p.y = p.ty
+        vp.dataset.cursor = 'true'
+      }
+      if (!raf) raf = requestAnimationFrame(loop)
+    }
+    const onLeave = () => delete vp.dataset.cursor
+    vp.addEventListener('pointermove', onMove)
+    vp.addEventListener('pointerleave', onLeave)
+    return () => {
+      cancelAnimationFrame(raf)
+      vp.removeEventListener('pointermove', onMove)
+      vp.removeEventListener('pointerleave', onLeave)
+    }
+  }, [gl])
+
   const onKeyDown = (ev: React.KeyboardEvent) => {
     if (ev.key === 'ArrowRight') {
       ev.preventDefault()
@@ -211,7 +247,7 @@ export function Gallery() {
     <>
       <div className="gallery__controls">
         <p className="gallery__hint" id="gallery-hint">
-          {gl ? 'Kéo để xem tiếp — hoặc dùng phím ← →.' : 'Vuốt ngang để xem tiếp.'}
+          {gl ? 'Kéo để xem tiếp · phím ← →' : 'Vuốt ngang để xem tiếp'}
         </p>
         <div className="gallery__buttons">
           <button type="button" className="icon-button" onClick={() => step(-1)} aria-label="Ảnh trước">
@@ -233,6 +269,11 @@ export function Gallery() {
         onKeyDown={onKeyDown}
       >
         {gl && <canvas ref={canvasRef} className="gallery__canvas" aria-hidden="true" />}
+        {gl && (
+          <div ref={cursorRef} className="drag-cursor" aria-hidden="true">
+            Kéo
+          </div>
+        )}
         <ul className="gallery__track">
           {Array.from({ length: copies }, (_, c) =>
             items.map((it, i) => {

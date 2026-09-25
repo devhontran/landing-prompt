@@ -1,6 +1,6 @@
 {
   "base": "http://localhost:3000",
-  "date": "2026-09-25T16:40:56.926Z",
+  "date": "2026-09-25T17:54:47.998Z",
   "checks": [
     {
       "name": "Header bảo mật có mặt, không lộ X-Powered-By",
@@ -21,6 +21,7 @@
       "name": "[1440x900] 0%: chương \"hero\" hiển thị & trạng thái 3D đúng",
       "pass": true,
       "visible": [
+        "hero",
         "hero"
       ],
       "drawCalls": 24,
@@ -103,19 +104,21 @@
       "name": "[1440x900] 97%: chương \"final\" hiển thị & trạng thái 3D đúng",
       "pass": true,
       "visible": [
+        "final",
         "final"
       ],
-      "drawCalls": 25,
-      "triangles": 11668
+      "drawCalls": 27,
+      "triangles": 12692
     },
     {
       "name": "[1440x900] 100%: chương \"final\" hiển thị & trạng thái 3D đúng",
       "pass": true,
       "visible": [
+        "final",
         "final"
       ],
-      "drawCalls": 25,
-      "triangles": 11668
+      "drawCalls": 27,
+      "triangles": 12692
     },
     {
       "name": "[1440x900] Chữ không chồng lên khung bao model, không tràn ngang",
@@ -141,6 +144,7 @@
       "name": "[1280x720] 0%: chương \"hero\" hiển thị & trạng thái 3D đúng",
       "pass": true,
       "visible": [
+        "hero",
         "hero"
       ],
       "drawCalls": 24,
@@ -223,19 +227,21 @@
       "name": "[1280x720] 97%: chương \"final\" hiển thị & trạng thái 3D đúng",
       "pass": true,
       "visible": [
+        "final",
         "final"
       ],
-      "drawCalls": 25,
-      "triangles": 11668
+      "drawCalls": 27,
+      "triangles": 12692
     },
     {
       "name": "[1280x720] 100%: chương \"final\" hiển thị & trạng thái 3D đúng",
       "pass": true,
       "visible": [
+        "final",
         "final"
       ],
-      "drawCalls": 25,
-      "triangles": 11668
+      "drawCalls": 27,
+      "triangles": 12692
     },
     {
       "name": "[1280x720] Chữ không chồng lên khung bao model, không tràn ngang",
@@ -261,6 +267,7 @@
       "name": "[1920x1080] 0%: chương \"hero\" hiển thị & trạng thái 3D đúng",
       "pass": true,
       "visible": [
+        "hero",
         "hero"
       ],
       "drawCalls": 24,
@@ -343,19 +350,21 @@
       "name": "[1920x1080] 97%: chương \"final\" hiển thị & trạng thái 3D đúng",
       "pass": true,
       "visible": [
+        "final",
         "final"
       ],
-      "drawCalls": 25,
-      "triangles": 11668
+      "drawCalls": 27,
+      "triangles": 12692
     },
     {
       "name": "[1920x1080] 100%: chương \"final\" hiển thị & trạng thái 3D đúng",
       "pass": true,
       "visible": [
+        "final",
         "final"
       ],
-      "drawCalls": 25,
-      "triangles": 11668
+      "drawCalls": 27,
+      "triangles": 12692
     },
     {
       "name": "[1920x1080] Chữ không chồng lên khung bao model, không tràn ngang",
@@ -381,32 +390,32 @@
       "name": "Gallery kéo được bằng chuột",
       "pass": true,
       "before": 0,
-      "after": -0.7914408513800635
+      "after": -0.7702737593968617
     },
     {
       "name": "Gallery lặp liên tục (không lộ khoảng trống lớn sau nhiều vòng kéo)",
       "pass": true,
-      "maxGap": 37.8125,
-      "reach": 1502.4000244140625,
+      "maxGap": 38.90937042236328,
+      "reach": 1561.4000244140625,
       "width": 1440,
-      "H": 630,
-      "offset": -14.11527916270392
+      "H": 648,
+      "offset": -13.7303720429501
     },
     {
       "name": "Gallery điều khiển được bằng phím mũi tên",
       "pass": true,
-      "k0": -14.12698412698414,
-      "k1": -14.606984126984141
+      "k0": -13.734567901234538,
+      "k1": -14.214567901234538
     },
     {
       "name": "FPS khi cuộn toàn bộ phần kể chuyện (1440×900)",
       "pass": true,
-      "avgFps": 5.9,
-      "p95FrameMs": 450,
-      "frames": 408,
-      "seconds": 68.6,
+      "avgFps": 6.5,
+      "p95FrameMs": 400,
+      "frames": 410,
+      "seconds": 62.8,
       "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
-      "note": "5.9 fps trung bình, p95 450 ms — renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+      "note": "6.5 fps trung bình, p95 400 ms — renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
     },
     {
       "name": "Mobile: không tải three.js / model 3D, không có canvas",
@@ -422,20 +431,28 @@
       },
       "buttons": [
         [
-          113,
-          44
+          134,
+          46
         ],
         [
-          130,
+          147,
+          50
+        ],
+        [
+          167,
+          50
+        ],
+        [
+          48,
           48
         ],
         [
-          188,
+          48,
           48
         ],
         [
-          343,
-          58
+          199,
+          70
         ]
       ],
       "glb": [],
@@ -453,20 +470,28 @@
       "pass": true,
       "buttons": [
         [
-          113,
-          44
+          134,
+          46
         ],
         [
-          130,
+          147,
+          50
+        ],
+        [
+          167,
+          50
+        ],
+        [
+          48,
           48
         ],
         [
-          188,
+          48,
           48
         ],
         [
-          343,
-          58
+          199,
+          70
         ]
       ]
     },
@@ -499,22 +524,22 @@
         },
         {
           "tag": "A",
-          "text": "Thiết kế",
+          "text": "01Thiết kế",
           "outline": true
         },
         {
           "tag": "A",
-          "text": "Thông số",
+          "text": "02Thông số",
           "outline": true
         },
         {
           "tag": "A",
-          "text": "Cấu tạo",
+          "text": "03Cấu tạo",
           "outline": true
         },
         {
           "tag": "A",
-          "text": "Thư viện",
+          "text": "05Thư viện",
           "outline": true
         },
         {

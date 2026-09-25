@@ -55,10 +55,10 @@ export const initialState = (): StoryState => ({
   focusY: 0,
   focusZ: 0,
   radius: 1.62,
-  fx: 0.68,
-  fy: 0.54,
-  fw: 0.46,
-  fh: 0.74,
+  fx: 0.6,
+  fy: 0.39,
+  fw: 0.5,
+  fh: 0.52,
   rDriver: 1,
   rPcb: 1,
   rShell: 1,
@@ -76,6 +76,8 @@ export const initialState = (): StoryState => ({
 
 /** Vùng khung cho từng cảnh — đồng bộ với bố cục chữ trong globals.css. */
 const FRAME = {
+  /** Hero & cảnh kết: model ở giữa-phải phía trên, tiêu đề display trải ngang đáy màn hình. */
+  hero: { fx: 0.6, fy: 0.39, fw: 0.5, fh: 0.52 },
   side: { fx: 0.68, fy: 0.54, fw: 0.46, fh: 0.74 },
   blueprint: { fx: 0.5, fy: 0.56, fw: 0.36, fh: 0.7 },
   construct: { fx: 0.67, fy: 0.53, fw: 0.5, fh: 0.76 },
@@ -102,6 +104,8 @@ export function buildStateTimeline(gsap: typeof GSAP, s: StoryState) {
 
   // 1. Quay từ mặt trước sang mặt sau, camera nhích gần để xem chi tiết cổng.
   tl.to(s, { rotY: Math.PI - 0.42, pitch: 0.15, radius: 1.55, duration: 22, ease }, 3)
+  // Tiêu đề hero rời đi (5.5–8) rồi model mới hạ xuống vùng khung bên phải.
+  tl.to(s, { ...FRAME.side, duration: 10, ease }, 7.5)
   tl.to(s, { dust: 0.35, duration: 10 }, 12)
   tl.addLabel('back', MARK.back)
 
@@ -139,7 +143,7 @@ export function buildStateTimeline(gsap: typeof GSAP, s: StoryState) {
 
   // 4. Cảnh kết: góc thấp chính diện, sàn phản chiếu, bụi trong vệt sáng, màng loa "thở".
   tl.to(s, { lines: 0, grid: 0, duration: 3 }, 87)
-  tl.to(s, { rotY: TAU - 0.5, pitch: 0.1, focusY: -0.25, radius: 1.9, ...FRAME.side, duration: 7, ease }, 88)
+  tl.to(s, { rotY: TAU - 0.5, pitch: 0.1, focusY: -0.25, radius: 1.9, ...FRAME.hero, duration: 7, ease }, 88)
   tl.to(s, { floor: 1, warmth: 1, dust: 1, duration: 5 }, 89)
   tl.to(s, { pulse: 1, duration: 4 }, 92)
   tl.addLabel('final', MARK.final)

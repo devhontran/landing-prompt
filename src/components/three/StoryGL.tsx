@@ -72,21 +72,20 @@ export default function StoryGL() {
       const q = (sel: string) => story.querySelector<HTMLElement>(sel)
       const text = (id: string) => q(`[data-chapter="${id}"] .chapter__text`)
       const OUT = { opacity: 0, y: -24, duration: 2.2, ease: 'power2.in' }
-      const HIDDEN_CLIP = 'inset(-25% -6% 100% -6%)'
-      const SHOWN_CLIP = 'inset(-25% -6% -25% -6%)'
-      /** Chữ vào theo nhịp của mặt quét: tiêu đề được "lau" từ dưới lên, phần còn lại hiện dần theo thứ tự. */
+      /** Chữ vào theo từng cảnh: mỗi dòng tiêu đề trồi lên sau mặt nạ, phần còn lại hiện dần theo thứ tự. */
       const show = (el: HTMLElement | null, tIn: number, tOut?: number) => {
         if (!el) return
-        tl.fromTo(el, { opacity: 0, y: 0 }, { opacity: 1, duration: 0.6 }, tIn)
+        tl.fromTo(el, { opacity: 0, y: 0 }, { opacity: 1, duration: 0.4 }, tIn)
+        const lines = el.querySelectorAll('.line__inner')
+        if (lines.length) tl.fromTo(lines, { yPercent: 140 }, { yPercent: 0, duration: 2.2, ease: 'power3.out', stagger: 0.3 }, tIn)
         const heading = el.querySelector('h1, h2, h3')
-        if (heading) tl.fromTo(heading, { clipPath: HIDDEN_CLIP, y: 28 }, { clipPath: SHOWN_CLIP, y: 0, duration: 2.4, ease: 'power3.out' }, tIn)
         const rest = [...el.children].filter((c) => c !== heading)
-        tl.fromTo(rest, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 1.8, ease: 'power2.out', stagger: 0.35 }, tIn + 0.5)
+        tl.fromTo(rest, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 1.8, ease: 'power2.out', stagger: 0.35 }, tIn + 0.6)
         if (tOut !== undefined) tl.to(el, OUT, tOut)
       }
 
       // Hero: hiện sẵn, mờ đi khi bắt đầu xoay.
-      tl.to(text('hero'), { ...OUT }, 6.5)
+      tl.to(story.querySelectorAll('[data-chapter="hero"] .chapter__text, .hero__scroll'), { ...OUT, stagger: 0.3 }, 5.5)
       show(text('back'), 12, 25)
       show(text('blueprint'), 34, 51)
       const specEls = gsap.utils.toArray<HTMLElement>('[data-spec]', story)
@@ -105,7 +104,8 @@ export default function StoryGL() {
           tl.to(line, { opacity: 0, duration: 1.5 }, b)
         }
       }
-      show(text('final'), MARK.final - 1)
+      show(text('final'), MARK.final - 1.5)
+      show(q('[data-chapter="final"] .final__cta'), MARK.final - 0.5)
       const cta = q('[data-chapter="final"] .cta-group')
       if (cta) tl.fromTo(cta, { autoAlpha: 0 }, { autoAlpha: 1, duration: 2 }, MARK.final)
 
@@ -132,10 +132,12 @@ export default function StoryGL() {
       // Thanh tiến độ chương (chỉ ghi DOM khi chương thay đổi).
       const bar = document.querySelector<HTMLElement>('.story-progress')
       const fill = bar?.querySelector<HTMLElement>('.story-progress__fill')
+      const pct = bar?.querySelector<HTMLElement>('.story-progress__pct')
       const chapterStarts = [MARK.hero, 10, 27, 52, 88]
       let lastIdx = -1
       function updateProgress(p: number) {
         if (fill) fill.style.transform = `scaleX(${p.toFixed(4)})`
+        if (pct) pct.textContent = String(Math.round(p * 100)).padStart(3, '0')
         const t = p * 100
         let idx = 0
         chapterStarts.forEach((c, i) => t >= c && (idx = i))

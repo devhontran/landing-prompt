@@ -1,14 +1,11 @@
 import type { Metadata, Viewport } from 'next'
-import { Be_Vietnam_Pro } from 'next/font/google'
+import { Geist, Geist_Mono } from 'next/font/google'
 import { product } from '@/content/product'
 import './globals.css'
 
-const font = Be_Vietnam_Pro({
-  subsets: ['latin', 'vietnamese'],
-  weight: ['400', '500'],
-  display: 'swap',
-  variable: '--font-sans',
-})
+// Grotesk hiện đại cho display + body; mono cho nhãn kỹ thuật (đánh số chương, thông số). Cả hai có tiếng Việt, font biến thiên.
+const sans = Geist({ subsets: ['latin', 'vietnamese'], display: 'swap', variable: '--font-sans' })
+const mono = Geist_Mono({ subsets: ['latin', 'vietnamese'], display: 'swap', variable: '--font-mono', preload: false })
 
 /** [CẦN CUNG CẤP] Domain chính thức qua NEXT_PUBLIC_SITE_URL (dùng cho canonical, Open Graph, sitemap). */
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
@@ -45,7 +42,7 @@ const bootScript = `document.documentElement.classList.add('js');if(/[?&]static\
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="vi" className={font.variable} suppressHydrationWarning>
+    <html lang="vi" className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       </head>

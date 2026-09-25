@@ -208,7 +208,7 @@ export class StageController {
     const bu = this.backdrop.material.uniforms
     bu.uRes.value.set(W * dpr, H * dpr)
     bu.uDpr.value = dpr
-    bu.uCenter.value.set(s.fx, 1 - s.fy + 0.04)
+    bu.uCenter.value.set(s.fx, 1 - s.fy)
     bu.uWarmth.value = s.warmth
     bu.uGrid.value = s.grid
 

@@ -126,21 +126,28 @@ export const parts: Part[] = [
   },
 ]
 
-/** Chữ cho các chương kể chuyện. `id` dùng làm neo điều hướng. */
+/**
+ * Chữ cho các chương kể chuyện. `id` dùng làm neo điều hướng.
+ * `lines`: cách ngắt dòng của tiêu đề display (mỗi dòng hiện ra riêng); nối lại bằng dấu cách = tiêu đề đầy đủ.
+ */
 export const chapters = {
-  hero: { id: 'gioi-thieu', eyebrow: 'Loa để bàn', title: product.tagline },
+  hero: {
+    id: 'gioi-thieu',
+    eyebrow: 'Loa để bàn',
+    lines: ['Âm thanh được', 'thiết kế từ bên trong.'],
+  },
   back: {
     id: 'thiet-ke',
     index: '01',
     eyebrow: 'Thiết kế',
-    title: 'Mặt sau cũng được chăm chút như mặt trước.',
+    lines: ['Mặt sau cũng', 'được chăm chút', 'như mặt trước.'],
     body: 'Cụm cổng kết nối và cổng thoát hơi được sắp xếp gọn trên nắp lưng, để chiếc loa đẹp ở mọi góc đặt trên bàn.',
   },
   blueprint: {
     id: 'thong-so',
     index: '02',
     eyebrow: 'Thông số',
-    title: 'Bản vẽ kỹ thuật.',
+    lines: ['Bản vẽ', 'kỹ thuật.'],
     body: 'Các thông số đang chờ dữ liệu chính thức từ nhà sản xuất.',
   },
   construction: { id: 'cau-tao', index: '03', eyebrow: 'Cấu tạo' },
@@ -148,7 +155,9 @@ export const chapters = {
     id: 'hoan-thien',
     index: '04',
     eyebrow: 'Hoàn thiện',
-    title: 'Sẵn sàng cho góc làm việc của bạn.',
+    lines: ['Sẵn sàng cho', 'góc làm việc của bạn.'],
     body: 'Một khối âm thanh gọn gàng, đặt vừa trên mặt bàn.',
   },
+  gallery: { id: 'thu-vien', index: '05', eyebrow: 'Thư viện', lines: ['Mọi góc nhìn.'] },
+  buy: { id: 'mua-ngay', index: '06', eyebrow: 'Đặt hàng' },
 }

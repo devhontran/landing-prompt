@@ -233,7 +233,7 @@ async function mobileTest() {
       const i = document.querySelector('[data-chapter="hero"] img')
       return { complete: i.complete, w: i.naturalWidth, src: i.currentSrc.slice(0, 80) }
     })(),
-    buttons: [...document.querySelectorAll('.button')].map((b) => {
+    buttons: [...document.querySelectorAll('.pill, .icon-button')].map((b) => {
       const r = b.getBoundingClientRect()
       return [Math.round(r.width), Math.round(r.height)]
     }),

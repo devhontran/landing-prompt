@@ -42,6 +42,15 @@ Công cụ debug: mở `/?debug` để thấy FPS và dữ liệu cảnh (`windo
 
 Chữ vào theo từng cảnh: tiêu đề được "lau" từ dưới lên (clip-path) cùng nhịp mặt quét, phần còn lại hiện dần theo thứ tự; khi đã hiện thì giữ nguyên, đủ lâu để đọc.
 
+## Hệ thiết kế (UI)
+
+- **Lưới 12 cột**, lề `clamp(16px, 3.2vw, 56px)`, khoảng cột `clamp(12px, 1.4vw, 24px)`; đường kẻ tóc làm khung cho mọi khối chữ.
+- **Chữ**: Geist (display + body, biến thiên, có tiếng Việt) và Geist Mono cho nhãn kỹ thuật. Display rất lớn, chặt (`line-height` 0.82–0.94, `letter-spacing` −0.045 → −0.07em); cỡ theo cả `vw` lẫn `vh` để tiêu đề hero không bao giờ chạm vùng model.
+- **Nhãn đánh số** kiểu bản vẽ: `(01) THIẾT KẾ ······ 01 / 04`; thông số và chú thích dùng mono.
+- **Nhịp bố cục**: hero và cảnh kết đặt tiêu đề display trải ngang đáy màn hình, model ở trên; các chương giữa đặt chữ ở cột 5 trái; gallery và đặt hàng mở bằng wordmark tràn ngang; footer kết bằng wordmark cắt ở mép dưới.
+- **Chuyển động chữ**: mỗi dòng tiêu đề trồi lên sau mặt nạ riêng (mặt nạ nới rộng để không cắt dấu tiếng Việt), nhãn và thân bài hiện dần theo thứ tự. Trên mobile chỉ fade.
+- **Chi tiết tương tác**: nút viên thuốc có biểu tượng tròn xoay khi hover, nav dạng capsule, con trỏ "Kéo" bám theo chuột trong gallery, thanh tiến độ chương có bộ đếm phần trăm.
+
 ## Kiến trúc cảnh 3D
 
 Một cảnh, một không khí ánh sáng (studio tối, một softbox), bảng màu hạn chế: than chì · champagne ấm · xanh bản vẽ.
@@ -114,7 +123,7 @@ Các quyết định chính:
 
 ## Kết quả kiểm tra (25/09/2026, trong container không có GPU)
 
-Số liệu thô: [`reports/verify-report.json`](./reports/verify-report.json), [`reports/lighthouse-summary.json`](./reports/lighthouse-summary.json), [`reports/profile.json`](./reports/profile.json). Ảnh chụp: [`docs/screenshots/`](./docs/screenshots), video: [`docs/demo/`](./docs/demo).
+Số liệu thô: [`reports/verify-report.json`](./reports/verify-report.json), [`reports/lighthouse-summary.json`](./reports/lighthouse-summary.json), [`reports/profile.json`](./reports/profile.json). Ảnh chụp từng section (desktop 1440×900 + mobile): [`docs/screenshots/`](./docs/screenshots).
 
 - `npm run build`, `npm run lint`, `npm run typecheck`: không lỗi.
 - `npm run verify`: **55/55 đạt** — 10 mốc cảnh × 3 kích thước màn hình (đo sau khi cảnh đã đứng yên); chữ không giao khung bao model; cuộn ngược từng bước và nhảy thẳng về đầu khôi phục đúng; gallery kéo được, lặp liên tục, điều khiển bằng phím; mobile không tải three.js/model; giảm chuyển động hiện nội dung ngay; bàn phím; header bảo mật; cache.

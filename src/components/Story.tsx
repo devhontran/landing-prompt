@@ -3,6 +3,7 @@ import { sceneImages } from '@/content/media'
 import { ScenePicture } from './ScenePicture'
 import { StoryStage } from './StoryStage'
 import { Value } from './Placeholder'
+import { Arrow, Lines, Meta } from './Typo'
 
 /**
  * Phần kể chuyện. HTML ngữ nghĩa đầy đủ được render sẵn trên server (SEO + trình đọc màn hình).
@@ -20,6 +21,7 @@ export function Story() {
           <div className="story-progress__track">
             <span className="story-progress__fill" />
           </div>
+          <span className="story-progress__pct">000</span>
           <ol>
             {[
               [chapters.hero.id, 'Giới thiệu'],
@@ -38,50 +40,50 @@ export function Story() {
         </div>
 
         <section className="chapter chapter--hero" data-chapter="hero" id={chapters.hero.id} aria-labelledby="hero-title">
-          <div className="chapter__text">
-            <p className="eyebrow">
-              {chapters.hero.eyebrow}
-              {product.namePlaceholder && <span className="badge">Tên sản phẩm: cần cung cấp</span>}
-            </p>
-            <h1 id="hero-title" tabIndex={-1}>
-              {chapters.hero.title}
+          <div className="chapter__text hero__title">
+            <h1 id="hero-title" className="t-display" tabIndex={-1}>
+              <Lines lines={chapters.hero.lines} />
             </h1>
-            <p className="lede">{product.description}</p>
-            <p className="scroll-hint" aria-hidden="true">
-              Cuộn để khám phá
-            </p>
           </div>
+          <div className="chapter__text hero__intro">
+            <Meta index="00" label={chapters.hero.eyebrow} />
+            <p className="lede">{product.description}</p>
+            {product.namePlaceholder && <span className="badge">Tên sản phẩm: cần cung cấp</span>}
+          </div>
+          <p className="hero__scroll meta" aria-hidden="true">
+            <span className="meta__label">Cuộn để khám phá</span>
+            <Arrow dir="down" />
+          </p>
           <ScenePicture media={sceneImages.hero} priority className="chapter__media" />
         </section>
 
         <section className="chapter chapter--side" data-chapter="back" id={chapters.back.id} aria-labelledby="back-title">
           <ScenePicture media={sceneImages.back} className="chapter__media reveal" />
           <div className="chapter__text reveal">
-            <p className="eyebrow">
-              <span className="index">{chapters.back.index}</span> {chapters.back.eyebrow}
-            </p>
-            <h2 id="back-title" tabIndex={-1}>
-              {chapters.back.title}
+            <Meta index={chapters.back.index} label={chapters.back.eyebrow} total="01 / 04" />
+            <h2 id="back-title" className="t-h2" tabIndex={-1}>
+              <Lines lines={chapters.back.lines} />
             </h2>
-            <p>{chapters.back.body}</p>
+            <p className="body">{chapters.back.body}</p>
           </div>
         </section>
 
         <section className="chapter chapter--blueprint" data-chapter="blueprint" id={chapters.blueprint.id} aria-labelledby="bp-title">
           <ScenePicture media={sceneImages.blueprint} className="chapter__media reveal" />
           <div className="chapter__text reveal">
-            <p className="eyebrow">
-              <span className="index">{chapters.blueprint.index}</span> {chapters.blueprint.eyebrow}
-            </p>
-            <h2 id="bp-title" tabIndex={-1}>
-              {chapters.blueprint.title}
+            <Meta index={chapters.blueprint.index} label={chapters.blueprint.eyebrow} total="02 / 04" />
+            <h2 id="bp-title" className="t-h2" tabIndex={-1}>
+              <Lines lines={chapters.blueprint.lines} />
             </h2>
-            <p>{chapters.blueprint.body}</p>
+            <p className="body">{chapters.blueprint.body}</p>
           </div>
           <dl className="specs reveal">
-            {specs.map((s) => (
+            {specs.map((s, i) => (
               <div key={s.id} className={`spec spec--${s.side}`} data-spec={s.id} data-anchor={s.anchor} data-side={s.side}>
-                <dt>{s.label}</dt>
+                <dt>
+                  <span className="spec__index">{String(i + 1).padStart(2, '0')}</span>
+                  {s.label}
+                </dt>
                 <dd>
                   <Value value={s.value} />
                 </dd>
@@ -91,18 +93,18 @@ export function Story() {
         </section>
 
         <section className="chapter-group" id={chapters.construction.id} aria-labelledby="construction-title">
-          <h2 id="construction-title" className="group-title" tabIndex={-1}>
-            <span className="index">{chapters.construction.index}</span> {chapters.construction.eyebrow}
+          <h2 id="construction-title" className="group-title meta" tabIndex={-1}>
+            <span className="meta__index">({chapters.construction.index})</span> <span className="meta__label">{chapters.construction.eyebrow}</span>
           </h2>
           {parts.map((p) => (
             <article key={p.id} className="chapter chapter--part" data-chapter={p.id} aria-labelledby={`part-${p.id}`}>
               <ScenePicture media={sceneImages[p.id]} className="chapter__media reveal" />
               <div className="chapter__text reveal">
-                <p className="eyebrow">
-                  <span className="index">{p.index}</span> {chapters.construction.eyebrow}
-                </p>
-                <h3 id={`part-${p.id}`}>{p.title}</h3>
-                <p>{p.body}</p>
+                <Meta index={p.index} label={chapters.construction.eyebrow} total="03 / 04" />
+                <h3 id={`part-${p.id}`} className="t-h2">
+                  <Lines lines={[p.title]} />
+                </h3>
+                <p className="body">{p.body}</p>
                 <dl className="materials">
                   {p.materials.map((m) => (
                     <div key={m.label}>
@@ -120,20 +122,26 @@ export function Story() {
 
         <section className="chapter chapter--final" data-chapter="final" id={chapters.final.id} aria-labelledby="final-title">
           <ScenePicture media={sceneImages.final} className="chapter__media reveal" />
-          <div className="chapter__text reveal">
-            <p className="eyebrow">
-              <span className="index">{chapters.final.index}</span> {chapters.final.eyebrow}
-            </p>
-            <h2 id="final-title" tabIndex={-1}>
-              {chapters.final.title}
+          <div className="chapter__text final__title reveal">
+            <Meta index={chapters.final.index} label={chapters.final.eyebrow} total="04 / 04" />
+            <h2 id="final-title" className="t-display t-display--sm" tabIndex={-1}>
+              <Lines lines={chapters.final.lines} />
             </h2>
-            <p>{chapters.final.body}</p>
+          </div>
+          <div className="chapter__text final__cta reveal">
+            <p className="body">{chapters.final.body}</p>
             <div className="cta-group">
-              <a className="button button--primary" href={buy.href} rel={buy.configured ? 'noopener' : undefined}>
-                Mua ngay
+              <a className="pill pill--light" href={buy.href} rel={buy.configured ? 'noopener' : undefined}>
+                <span>Mua ngay</span>
+                <span className="pill__icon">
+                  <Arrow />
+                </span>
               </a>
-              <a className="button button--ghost" href="#thu-vien">
-                Xem thư viện ảnh
+              <a className="pill pill--ghost" href={`#${chapters.gallery.id}`}>
+                <span>Thư viện ảnh</span>
+                <span className="pill__icon">
+                  <Arrow dir="down" />
+                </span>
               </a>
             </div>
           </div>

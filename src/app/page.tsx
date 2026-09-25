@@ -3,7 +3,8 @@ import { Story } from '@/components/Story'
 import { Gallery } from '@/components/gallery/Gallery'
 import { BuySection } from '@/components/BuySection'
 import { RevealObserver } from '@/components/Reveal'
-import { product, buy } from '@/content/product'
+import { product, buy, chapters } from '@/content/product'
+import { Arrow, Lines, Meta } from '@/components/Typo'
 import { sceneImages, galleryImages } from '@/content/media'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
@@ -28,18 +29,31 @@ export default function Home() {
       <SiteHeader />
       <main id="noi-dung">
         <Story />
-        <section className="gallery" id="thu-vien" aria-labelledby="gallery-title">
-          <div className="gallery__head">
-            <p className="eyebrow">Thư viện</p>
-            <h2 id="gallery-title">Mọi góc nhìn.</h2>
+        <section className="gallery" id={chapters.gallery.id} aria-labelledby="gallery-title">
+          <div className="gallery__head reveal">
+            <Meta index={chapters.gallery.index} label={chapters.gallery.eyebrow} total={`${String(galleryImages.length).padStart(2, '0')} góc nhìn`} />
+            <h2 id="gallery-title" className="t-display">
+              <Lines lines={chapters.gallery.lines} />
+            </h2>
           </div>
           <Gallery />
         </section>
         <BuySection />
       </main>
       <footer className="site-footer">
-        <p>© {new Date().getFullYear()} {product.brand ?? 'Tên thương hiệu (cần cung cấp)'}.</p>
-        <p className="muted">Hình ảnh, model 3D và thông số trên trang hiện là placeholder, chưa phải dữ liệu chính thức.</p>
+        <div className="site-footer__row">
+          <p className="meta">
+            <span className="meta__label">© {new Date().getFullYear()} {product.brand ?? 'Thương hiệu (cần cung cấp)'}</span>
+          </p>
+          <p className="site-footer__note">Hình ảnh, model 3D và thông số trên trang hiện là placeholder, chưa phải dữ liệu chính thức.</p>
+          <a className="meta site-footer__top" href={`#${chapters.hero.id}`}>
+            <span className="meta__label">Lên đầu trang</span>
+            <Arrow dir="up" />
+          </a>
+        </div>
+        <p className="site-footer__mark" aria-hidden="true">
+          {product.brand ?? product.name}
+        </p>
       </footer>
       <RevealObserver />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: productJsonLd() }} />
