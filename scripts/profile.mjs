@@ -30,25 +30,27 @@ page.on('response', async (r) => {
   else if (/\.(glb|gltf|bin)(\?|$)/.test(u)) bytes.model += len
   else if (/\.(ktx2|basis)(\?|$)/.test(u)) bytes.texture += len
 })
-await page.goto(`${BASE}/?debug`, { waitUntil: 'networkidle' })
-await page.waitForFunction(() => window.__story?.debug?.frame, null, { timeout: 60000 })
+await page.goto(BASE, { waitUntil: 'networkidle' })
+await page.waitForFunction(() => window.__scene?.settled(), null, { timeout: 60000 })
 await page.evaluate(spectorSrc)
 const scenes = [
-  ['hero', 0],
-  ['back', 20],
-  ['blueprint', 44],
-  ['exploded-driver', 63],
-  ['pcb', 75],
-  ['final', 97],
+  ['hero', 'gioi-thieu', 0],
+  ['statement', 'tuyen-ngon', 0.45],
+  ['exploded', 'cau-tao', 0.6],
+  ['finish', 'phien-ban', 0.35],
 ]
 const out = { date: new Date().toISOString(), viewport: '1440x900', scenes: {}, budget: { drawCalls: 100, triangles: 300000, payloadMB: 3 } }
-for (const [name, pct] of scenes) {
-  await page.evaluate((p) => {
-    const st = window.__story.st
-    window.scrollTo(0, st.start + ((st.end - st.start) * p) / 100)
-  }, pct)
+for (const [name, id, f] of scenes) {
+  await page.evaluate(
+    ([id, f]) => {
+      const el = document.getElementById(id)
+      const y = el.getBoundingClientRect().top + scrollY + (el.offsetHeight - (id === 'cau-tao' ? innerHeight : 0)) * f
+      window.__scene.scrollTo(y)
+    },
+    [id, f],
+  )
   await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(r, 200)))))
-  await page.waitForFunction(() => window.__story.settled(), null, { timeout: 60000, polling: 200 })
+  await page.waitForFunction(() => window.__scene.settled(), null, { timeout: 60000, polling: 200 })
   const res = await page.evaluate(
     () =>
       new Promise((resolve) => {
@@ -65,8 +67,8 @@ for (const [name, pct] of scenes) {
           resolve({ drawCalls: draws.length, commands: c.commands.length, triangles: Math.round(tris), lineAndPointDraws: draws.filter((d) => d.commandArguments[0] !== 4).length })
         })
         spector.captureCanvas(canvas, 0, true)
-        // Kích một frame (parallax con trỏ yêu cầu vẽ lại).
-        window.dispatchEvent(new PointerEvent('pointermove', { clientX: innerWidth / 2 + 1, clientY: innerHeight / 2 }))
+        // Kích một frame (canvas chỉ vẽ khi có thay đổi).
+        window.dispatchEvent(new Event('resize'))
       }),
   )
   out.scenes[name] = res

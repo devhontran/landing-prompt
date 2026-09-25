@@ -13,14 +13,14 @@
       "tbt": "40 ms",
       "cls": "0",
       "fcp": "1.1 s",
-      "si": "1.2 s",
+      "si": "1.1 s",
       "failing": [
         "network-dependency-tree-insight"
       ]
     },
     "all": [
       {
-        "performance": 96,
+        "performance": 95,
         "accessibility": 100,
         "best-practices": 100,
         "seo": 100,
@@ -52,7 +52,7 @@
         "agentic-browsing": 100
       },
       "jsKB": 149,
-      "lcp": "0.6 s",
+      "lcp": "0.5 s",
       "tbt": "0 ms",
       "cls": "0",
       "fcp": "0.3 s",
@@ -88,42 +88,43 @@
   "desktop-3d": {
     "median": {
       "scores": {
-        "performance": 67,
+        "performance": 69,
         "accessibility": 100,
         "best-practices": 100,
         "seo": 100,
         "agentic-browsing": 100
       },
-      "jsKB": 506,
-      "lcp": "0.7 s",
-      "tbt": "1,110 ms",
+      "jsKB": 448,
+      "lcp": "0.5 s",
+      "tbt": "2,960 ms",
       "cls": "0",
       "fcp": "0.3 s",
-      "si": "2.1 s",
+      "si": "1.4 s",
       "failing": [
         "total-blocking-time",
         "max-potential-fid",
         "valid-source-maps",
+        "forced-reflow-insight",
         "network-dependency-tree-insight"
       ]
     },
     "all": [
       {
-        "performance": 64,
+        "performance": 69,
         "accessibility": 100,
         "best-practices": 100,
         "seo": 100,
         "agentic-browsing": 100
       },
       {
-        "performance": 67,
+        "performance": 69,
         "accessibility": 100,
         "best-practices": 100,
         "seo": 100,
         "agentic-browsing": 100
       },
       {
-        "performance": 76,
+        "performance": 69,
         "accessibility": 100,
         "best-practices": 100,
         "seo": 100,

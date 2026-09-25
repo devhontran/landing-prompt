@@ -11,8 +11,12 @@ const PORT = 3100
 const LABEL = process.env.CAPTURE_LABEL ?? 'PLACEHOLDER — render từ model tạm'
 const only = process.argv[2] ? new RegExp(process.argv[2]) : null
 const jobs = [
-  ...['hero', 'back', 'blueprint', 'driver', 'pcb', 'enclosure', 'final'].map((n) => ({ preset: n, w: 1200, h: 1200, out: `src/assets/scenes/${n}.webp` })),
-  ...Array.from({ length: 8 }, (_, i) => ({ preset: `view-${i + 1}`, w: 1080, h: 1350, out: `src/assets/gallery/view-${i + 1}.webp` })),
+  { preset: 'hero', w: 1200, h: 1500, out: 'src/assets/hero.webp' },
+  { preset: 'statement', w: 1200, h: 900, out: 'src/assets/statement.webp' },
+  { preset: 'exploded', w: 1200, h: 1200, out: 'src/assets/exploded.webp' },
+  ...['graphite', 'silver', 'walnut'].map((f) => ({ preset: `finish-${f}`, w: 1200, h: 1200, out: `src/assets/finish-${f}.webp` })),
+  ...['aluminium', 'glass', 'walnut'].map((m) => ({ preset: `material-${m}`, w: 1200, h: 900, out: `src/assets/material-${m}.webp` })),
+  { preset: 'room', w: 1920, h: 1080, out: 'src/assets/room.webp' },
   { preset: 'hero', w: 1200, h: 630, out: 'src/app/opengraph-image.jpg' },
 ].filter((j) => !only || only.test(j.out))
 
@@ -28,12 +32,13 @@ try {
   for (const j of jobs) {
     await page.setViewportSize({ width: j.w, height: j.h })
     await page.goto(`http://localhost:${PORT}/capture?preset=${j.preset}&w=${j.w}&h=${j.h}`, { waitUntil: 'networkidle' })
+    await page.addStyleTag({ content: 'nextjs-portal{display:none!important}' })
     await page.waitForSelector('[data-capture-ready]', { timeout: 60000 })
     await page.waitForTimeout(400)
     const png = await page.locator('canvas').screenshot()
     const fs = Math.round(j.w / 60)
     const label = Buffer.from(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="${j.w}" height="${j.h}"><text x="${fs * 1.6}" y="${j.h - fs * 1.6}" fill="#d9b98a" fill-opacity="0.85" font-family="sans-serif" font-size="${fs}" letter-spacing="1">${LABEL}</text></svg>`,
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${j.w}" height="${j.h}"><text x="${fs * 1.6}" y="${j.h - fs * 1.6}" fill="#bdbec4" fill-opacity="0.9" font-family="sans-serif" font-size="${fs}" letter-spacing="1">${LABEL}</text></svg>`,
     )
     const img = sharp(await sharp(png).resize(j.w, j.h, { fit: 'cover' }).toBuffer()).composite(LABEL ? [{ input: label }] : [])
     if (j.out.endsWith('.jpg')) await img.jpeg({ quality: 82, mozjpeg: true }).toFile(j.out)

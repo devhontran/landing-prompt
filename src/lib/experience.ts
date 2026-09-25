@@ -1,11 +1,10 @@
 /**
  * Chọn chế độ trải nghiệm.
  * - '3d'    : desktop, con trỏ chính xác, không yêu cầu giảm chuyển động, có WebGL2.
- * - 'static': mobile/tablet, giảm chuyển động, tiết kiệm dữ liệu, hoặc không có WebGL → ảnh tĩnh, không tải three.js.
+ * - 'static': mobile/tablet, giảm chuyển động, tiết kiệm dữ liệu, CPU < 4 luồng, hoặc không có WebGL → ảnh tĩnh, không tải three.js.
  * Truy vấn này phải trùng với khối @media trong globals.css (bố cục được CSS quyết định ngay từ lần vẽ đầu → không CLS).
  */
-export const DESKTOP_3D_QUERY =
-  '(min-width: 1024px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)'
+export const DESKTOP_3D_QUERY = '(min-width: 1024px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)'
 
 export type ExperienceMode = '3d' | 'static'
 
@@ -26,6 +25,8 @@ export function detectMode(): ExperienceMode {
   if (params.has('static')) return 'static'
   const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection
   if (conn?.saveData) return 'static'
+  // Máy yếu (< 4 luồng CPU) → ảnh tĩnh.
+  if ((navigator.hardwareConcurrency || 8) < 4) return 'static'
   if (!window.matchMedia(DESKTOP_3D_QUERY).matches) return 'static'
   return hasWebGL2() ? '3d' : 'static'
 }

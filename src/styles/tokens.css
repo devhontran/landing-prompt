@@ -1,0 +1,36 @@
+/* Design tokens — lấy đúng từ brief LIKOVA, không tự thêm giá trị khác. */
+:root {
+  --bg: #070b20; /* navy đêm – nền chủ đạo */
+  --fg: #ffffff;
+  --surface: #232739; /* panel/card tối */
+  --muted: #11162d;
+  --muted-fg: #bdbec4; /* text phụ trên nền tối */
+  --border: #393c4d; /* hairline 1px trên nền tối */
+  --light-bg: #ffffff; /* section sáng */
+  --light-alt: #e3e6eb; /* section sáng thay thế */
+  --metal: linear-gradient(180deg, #c7cbd4, #5a5f65); /* chỉ cho chi tiết nhỏ */
+  --danger: #ce1d20; /* chỉ cho lỗi form */
+
+  --font: var(--font-manrope), 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --text-label: 11px; /* tracking +0.04em */
+  --text-body: 14px; /* line-height 1.29, max 45ch */
+  --text-statement: clamp(22px, 2.2vw, 32px); /* tracking -0.01em */
+  --text-h2: clamp(48px, 5.9vw, 85px); /* line-height 1, tracking -0.01em */
+  --text-display: clamp(72px, 9.9vw, 143px); /* line-height 1.05, tracking -0.04em */
+
+  --gutter: 20px; /* lề ngoài & khoảng cột, lưới 12 cột */
+  --section-y: 240px;
+  --radius: 0;
+  --ease: cubic-bezier(0.7, 0, 0.3, 1); /* easing DUY NHẤT */
+  --dur-fast: 0.5s;
+  --dur: 1s;
+  --dur-slow: 2s;
+
+  --nav-h: 50px;
+  --col: calc((100vw - 13 * var(--gutter)) / 12);
+}
+@media (max-width: 640px) {
+  :root {
+    --section-y: 120px;
+  }
+}

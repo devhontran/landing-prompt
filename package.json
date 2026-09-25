@@ -1,7 +1,7 @@
 {
   "name": "speaker-landing",
   "version": "0.1.0",
-  "description": "Landing page giới thiệu loa để bàn cao cấp (Next.js + R3F + GSAP)",
+  "description": "Landing page loa hi-end theo art direction LIKOVA (Next.js + R3F + GSAP)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

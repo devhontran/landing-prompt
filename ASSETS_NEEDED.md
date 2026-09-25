@@ -1,50 +1,57 @@
-# Tài nguyên cần cung cấp
+# Tài nguyên cần cung cấp (TODO)
 
-Mọi mục dưới đây hiện đang là **placeholder có gắn nhãn** trên trang. Không có thông số nào được tự đặt ra — các ô chưa có dữ liệu đều hiện "Cần cung cấp".
+Mọi mục dưới đây hiện là **placeholder có gắn nhãn** trên trang (`[CẦN CUNG CẤP]`, badge "Ảnh placeholder"). Không có thông số nào được tự đặt ra — các con số ví dụ trong brief **không** được dùng.
 
-## 1. Những ý tưởng phụ thuộc vào cấu trúc model / tài nguyên chưa có
+## 1. Nội dung — `src/content/site.ts`
 
-| Ý tưởng | Phụ thuộc vào | Nếu thiếu thì sao |
+| TODO | Trường | Hiện đang hiển thị |
 |---|---|---|
-| Highlight lần lượt **củ loa → bo mạch → vỏ loa** | Model phải **tách thành các node riêng**: `Driver`, `PCB`, `Enclosure`, `BackPanel`. Model marketing thường gộp thành một mesh → không highlight được. | Cần file CAD/model đã tách bộ phận. Loader báo lỗi rõ ràng và giữ model placeholder. |
-| **Thấy bo mạch bên trong** | Model phải có **hình học bên trong** (PCB, mặt trong vỏ) và nắp lưng là node riêng để tách ra. | Model chỉ có vỏ ngoài → cảnh bo mạch trống. |
-| **Thông số cạnh chi tiết tương ứng** | Vị trí điểm neo. Tốt nhất là các empty `Anchor_*` trong model (xem mục 2). | Thiếu anchor → dùng tâm hộp bao của bộ phận, có thể lệch điểm cần chỉ. |
-| **Phong cách bản vẽ kỹ thuật** | Nét được sinh tự động bằng `EdgesGeometry` (cạnh > 35°) + shader fresnel cho mặt cong, rồi "tự vẽ" từ trên xuống. Lưới tessellation từ CAD rất dày sẽ cho nét rối. | Cần model đã giảm lưới/retopology sạch; có thể chỉnh ngưỡng góc trong `partRig.ts`. |
-| **Exploded view** | Các khối (mặt trước, củ loa, vỏ, bo mạch, nắp lưng, núm, chân đế) là node riêng + extras `explode`. | Model gộp khối → chỉ tách được ở mức 4 bộ phận bắt buộc. |
-| Vùng khung, góc camera từng cảnh | Model được chuẩn hóa: gốc ở tâm khối loa, trục **+Z là mặt trước**, cao khoảng **2.3 đơn vị**. | Model lệch trục/tỷ lệ → phải chỉnh lại các góc `rotY/pitch/radius` trong `storyState.ts`. |
-| Ảnh tĩnh mobile + gallery | Ảnh chụp sản phẩm thật, hoặc render từ model thật (`npm run capture` render lại tự động khi model thật đã được nạp). | Đang là ảnh render từ model placeholder, có nhãn "PLACEHOLDER". |
-| Vật liệu cảnh cấu tạo ("hiện vật liệu đầy đủ") | Vật liệu PBR thật trong GLB (baseColor/roughness/metalness/normal). | Đang dùng vật liệu mô phỏng. |
+| Tên thương hiệu (wordmark giãn chữ) | `brand.name` | `BRAND` |
+| Tên model | `brand.model` | `[TÊN MODEL]` |
+| Giá (nếu muốn hiển thị) | `brand.price` | không hiển thị |
+| Dải tần đáp ứng (Hz) | `specs[0].value` | khung số mờ `00–00 000` |
+| Độ nhạy (dB) | `specs[1].value` | `00` |
+| Khối lượng mỗi chiếc (kg) | `specs[2].value` | `00` |
+| Xác nhận danh sách vật liệu (nhôm / kính gân / óc chó) | `materials` | copy minh hoạ + nhãn "Cần xác nhận" |
+| Xác nhận 3 phiên bản Graphite / Silver / Walnut | `finishes` | minh hoạ + nhãn "Cần xác nhận" |
+| Diện tích phòng phù hợp (m²) | `room.size` | `[CẦN CUNG CẤP]` |
+| Logo 3 đối tác / giải thưởng | `partners[].name` (+ file logo SVG) | `[LOGO — CẦN CUNG CẤP]` |
+| Danh sách showroom (form) | `showrooms` | select trống |
+| Địa chỉ showroom (footer) | `footer.address` | `[ĐỊA CHỈ]` |
+| Mạng xã hội | `footer.social` | `[MẠNG XÃ HỘI]` |
+| Duyệt copy (tagline, tuyên ngôn, mô tả) | `hero`, `statement`, `room`… | copy mẫu, không chứa số liệu |
 
-## 2. Model 3D — `public/models/speaker.glb`
+## 2. Model 3D — thay model placeholder
 
-- Định dạng: **glTF binary (.glb)**, nén hình học **Meshopt** (`EXT_meshopt_compression`), texture **KTX2/Basis** (`KHR_texture_basisu`, khuyến nghị — nhẹ bộ nhớ GPU) hoặc WebP, tối đa 2048 px. Bộ giải mã KTX2 được chép tự động vào `public/basis/` khi `npm install`.
-- Ngân sách đề xuất: **≤ 3 MB** sau nén, **≤ 150k tam giác**, ≤ 20 draw call sau khi gộp mesh cùng vật liệu.
-- Lệnh gợi ý: `npx @gltf-transform/cli optimize input.glb public/models/speaker.glb --compress meshopt --texture-compress ktx2 --texture-size 2048` (cần `toktx`; hoặc `--texture-compress webp`).
-- **Exploded view**: mỗi khối tách rời cần là node riêng có custom property (glTF extras) `explode: [x, y, z]` — hướng và khoảng tách theo toạ độ local, ví dụ mặt trước `[0, 0, 1.0]`, củ loa `[0, 0, 0.5]`, bo mạch `[0, 0, -0.55]`, nắp lưng `[0, 0, -1.1]`, núm `[0, 0.45, 0]`, chân đế `[0, -0.4, 0]`. Thiếu extras thì khối đó đứng yên.
-- **Rung màng loa ở cảnh kết**: vật liệu của màng loa cần extras `pulse: true` (tâm màng loa mặc định ở `(0, -0.2)` trong mặt XY — chỉnh `uPulseCenter` trong `stageController.ts` theo model thật).
-- Cấu trúc node **bắt buộc**: `Driver`, `PCB`, `Enclosure`, `BackPanel`.
-- Node **khuyến nghị** (Empty/Object3D): `Anchor_driver`, `Anchor_port`, `Anchor_io`, `Anchor_knob`, `Anchor_amp`, `Anchor_height`, `Anchor_width`, `Anchor_body`, `Anchor_shell`.
-- Sau khi đặt file: sửa `model.url` trong `src/content/product.ts` thành `'/models/speaker.glb?v=1'` (tăng `v` mỗi lần thay file vì model được cache `immutable` 1 năm), rồi chạy `npm run capture` để render lại ảnh tĩnh.
+Hiện dùng **model thủ tục** (`src/components/three/tower.ts`): loa cột tỉ lệ W:D:H = 1 : 1.1 : 3.2, 2 củ + tweeter, mặt kính gân dọc. Lưu ý: bản trước là loa để bàn; brief LIKOVA mô tả loa cột nên placeholder đổi theo brief.
 
-## 3. Ảnh — `src/assets/`
+- File: `public/models/speaker.glb` — glTF binary, nén **Meshopt**, texture **KTX2/Basis** (transcoder tự chép vào `public/basis/` khi `npm install`) hoặc WebP ≤ 2048 px. Ngân sách: ≤ 3 MB, ≤ 150k tam giác.
+- **Node bắt buộc** (khớp exploded view + chú thích): `Shell`, `Glass`, `Frame`, `Bass`, `Mid`, `Tweeter`, `Crossover`. Model marketing gộp một mesh sẽ không tách lớp được.
+- Chuẩn hoá: gốc ở tâm khối loa, **+Z là mặt trước**, +Y lên, cao ≈ 1.6 đơn vị.
+- Hướng tách: glTF extras `explode: [x, y, z]` trên từng node (mặc định trong `tower.ts`).
+- Vật liệu PBR thật (nhôm anod hoá, kính gân, cao su mờ). Nạp bằng `loadGlb.ts`, thay phần dựng hình trong `Tower` (API `setExplode/setFinish/setGlassOnly` giữ nguyên), rồi `npm run capture` để render lại ảnh tĩnh.
+- Texture quét thật cho gỗ óc chó / nhôm phay (hiện là texture thủ tục trong `textures.ts`).
 
-| File | Dùng cho | Kích thước đề xuất |
+## 3. Ảnh — `src/assets/` (hiện render từ model placeholder, có nhãn)
+
+| File | Dùng cho | Kích thước |
 |---|---|---|
-| `scenes/hero.webp`, `back`, `blueprint`, `driver`, `pcb`, `enclosure`, `final` | Mobile + chế độ giảm chuyển động (mỗi cảnh một ảnh) | 1200 × 1200 |
-| `gallery/view-1..8.webp` | Gallery | 1080 × 1350 (4:5) |
-| `src/app/opengraph-image.jpg` | Ảnh chia sẻ mạng xã hội | 1200 × 630 |
+| `hero.webp` | Hero (mobile / giảm chuyển động) | 1200 × 1500 |
+| `statement.webp` | Khối kính gân (mobile) | 1200 × 900 |
+| `exploded.webp` | Exploded view (mobile) | 1200 × 1200 |
+| `finish-graphite/silver/walnut.webp` | Chọn phiên bản (mobile) | 1200 × 1200 |
+| `material-aluminium.webp`, `material-glass.webp`, `material-walnut.webp` | Cặp ảnh vật liệu 4:3 | 1200 × 900 |
+| `room.webp` | Không gian nghe (ảnh chụp phòng thật) | 1920 × 1080 |
+| `src/app/opengraph-image.jpg` | Chia sẻ mạng xã hội | 1200 × 630 |
 
-Giữ nguyên tên file để không phải sửa code; cập nhật `alt`/`caption` và đặt `placeholder: false` trong `src/content/media.ts`. Next.js tự sinh AVIF/WebP theo kích thước màn hình.
+Giữ tên file, cập nhật `alt` và đặt `placeholder: false` trong `src/content/media.ts`. **Không dùng ảnh stock** (brief).
 
-## 4. Nội dung & thông số — `src/content/product.ts`
+## 4. Font
 
-- Tên sản phẩm (`product.name`, đặt `namePlaceholder: false`), thương hiệu (`product.brand`), giá (`product.price`).
-- Thông số bản vẽ (`specs[].value`): chiều cao, rộng × sâu, khối lượng, cổng thoát hơi, cổng kết nối, điều khiển.
-- Bảng thông số (`specSheet`): kích thước, khối lượng, củ loa, công suất, dải tần, kết nối, nguồn, chất liệu vỏ.
-- Vật liệu từng bộ phận (`parts[].materials`).
-- Duyệt lại các câu mô tả (hiện là copy mẫu viết chung, không chứa số liệu).
+Brief chỉ định TT Norms Pro (font thương mại, chưa có license) → đang dùng **Manrope** (Google Fonts, có tiếng Việt). Nếu có file license: đặt vào `src/app/fonts/` và đổi sang `next/font/local` trong `layout.tsx` (giữ biến `--font-manrope` hoặc sửa `--font` trong `tokens.css`).
 
 ## 5. Biến môi trường (xem `.env.example`)
 
-- `NEXT_PUBLIC_BUY_URL` — URL trang mua hàng (bắt buộc `https://`). Đây là URL công khai, **không phải khóa bí mật**.
-- `NEXT_PUBLIC_SITE_URL` — domain chính thức (canonical, Open Graph, sitemap).
+- `NEXT_PUBLIC_SITE_URL` — domain chính thức (canonical, OG, sitemap).
+- `NEXT_PUBLIC_CATALOGUE_URL` — PDF catalogue (https). Công khai, không phải khoá bí mật.
+- `BOOKING_WEBHOOK_URL` — **chỉ server**, nhận form đặt lịch. Chưa cấu hình → API trả 503, form báo rõ.

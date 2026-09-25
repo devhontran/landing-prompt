@@ -1,42 +1,30 @@
 {
-  "date": "2026-09-25T16:54:09.697Z",
+  "date": "2026-09-25T20:01:03.570Z",
   "viewport": "1440x900",
   "scenes": {
     "hero": {
-      "drawCalls": 24,
-      "commands": 149,
-      "triangles": 12610,
-      "lineAndPointDraws": 1
+      "drawCalls": 25,
+      "commands": 161,
+      "triangles": 11148,
+      "lineAndPointDraws": 0
     },
-    "back": {
-      "drawCalls": 24,
-      "commands": 149,
-      "triangles": 12610,
-      "lineAndPointDraws": 1
+    "statement": {
+      "drawCalls": 1,
+      "commands": 21,
+      "triangles": 12,
+      "lineAndPointDraws": 0
     },
-    "blueprint": {
-      "drawCalls": 44,
-      "commands": 108,
-      "triangles": 12530,
-      "lineAndPointDraws": 22
+    "exploded": {
+      "drawCalls": 25,
+      "commands": 186,
+      "triangles": 11148,
+      "lineAndPointDraws": 0
     },
-    "exploded-driver": {
-      "drawCalls": 37,
-      "commands": 143,
-      "triangles": 12530,
-      "lineAndPointDraws": 15
-    },
-    "pcb": {
-      "drawCalls": 38,
-      "commands": 145,
-      "triangles": 12530,
-      "lineAndPointDraws": 16
-    },
-    "final": {
-      "drawCalls": 47,
-      "commands": 289,
-      "triangles": 24198,
-      "lineAndPointDraws": 2
+    "finish": {
+      "drawCalls": 25,
+      "commands": 146,
+      "triangles": 11148,
+      "lineAndPointDraws": 0
     }
   },
   "budget": {
@@ -44,13 +32,9 @@
     "triangles": 300000,
     "payloadMB": 3
   },
-  "timings": {
-    "stage:build": 105,
-    "stage:env": 278,
-    "stage:compile": 29
-  },
+  "timings": {},
   "payload": {
-    "jsKB": 1701,
+    "jsKB": 1537,
     "modelKB": 0,
     "textureKB": 0
   },

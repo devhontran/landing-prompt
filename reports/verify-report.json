@@ -1,586 +1,396 @@
 {
-  "base": "http://localhost:3000",
-  "date": "2026-09-25T18:39:31.045Z",
+  "base": "http://localhost:3200",
+  "date": "2026-09-25T19:55:01.305Z",
   "checks": [
     {
-      "name": "Header bảo mật có mặt, không lộ X-Powered-By",
+      "name": "[bảo mật] Header bảo mật",
       "pass": true,
-      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self' blob:; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+      "note": "đủ"
     },
     {
-      "name": "Tài nguyên tĩnh /_next/static có cache immutable",
-      "pass": true,
-      "asset": "/_next/static/chunks/2zynomd7rkcis.js",
-      "cache": "public, max-age=31536000, immutable"
-    },
-    {
-      "name": "HTML không chứa chuỗi giống khóa bí mật",
+      "name": "[bảo mật] Không lộ x-powered-by",
       "pass": true
     },
     {
-      "name": "[1440x900] 0%: chương \"hero\" hiển thị & trạng thái 3D đúng",
+      "name": "[API] Đặt lịch: 422 khi sai, 503 khi chưa cấu hình webhook, 415 sai định dạng",
       "pass": true,
-      "visible": [
-        "hero",
-        "hero"
-      ],
-      "drawCalls": 24,
-      "triangles": 12610
+      "note": "422 / 503 / 415"
     },
     {
-      "name": "[1440x900] 14%: chương \"back\" hiển thị & trạng thái 3D đúng",
-      "pass": true,
-      "visible": [
-        "back"
-      ],
-      "drawCalls": 24,
-      "triangles": 12610
+      "name": "[SEO] lang=\"vi\", title, description, JSON-LD, canonical",
+      "pass": true
     },
     {
-      "name": "[1440x900] 24%: chương \"back\" hiển thị & trạng thái 3D đúng",
-      "pass": true,
-      "visible": [
-        "back"
-      ],
-      "drawCalls": 24,
-      "triangles": 12610
+      "name": "[bảo mật] Không có khoá bí mật trong HTML/JS",
+      "pass": true
     },
     {
-      "name": "[1440x900] 42%: chương \"blueprint\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] Preloader hiện rồi tự kết thúc (~2.5s)",
       "pass": true,
-      "visible": [
-        "blueprint",
-        "blueprint",
-        "blueprint",
-        "blueprint",
-        "blueprint"
-      ],
-      "drawCalls": 44,
-      "triangles": 12530
+      "note": "6159ms (gồm tải trang, SwiftShader)"
     },
     {
-      "name": "[1440x900] 47%: chương \"blueprint\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] Canvas WebGL + model ở hero",
       "pass": true,
-      "visible": [
-        "blueprint",
-        "blueprint",
-        "blueprint",
-        "blueprint",
-        "blueprint",
-        "blueprint",
-        "blueprint"
-      ],
-      "drawCalls": 44,
-      "triangles": 12530
+      "note": "{\"shown\":\"hero\",\"canvas\":true,\"tab\":\"1\"}"
     },
     {
-      "name": "[1440x900] 63%: chương \"driver\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] gioi-thieu:0 → cảnh \"hero\"",
       "pass": true,
-      "visible": [
-        "driver"
-      ],
-      "drawCalls": 37,
-      "triangles": 12530
+      "note": "shown=hero vis=visible calls=25 tris=11148"
     },
     {
-      "name": "[1440x900] 75%: chương \"pcb\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] gioi-thieu:0 model không đè chữ",
       "pass": true,
-      "visible": [
-        "pcb"
-      ],
-      "drawCalls": 38,
-      "triangles": 12530
+      "note": "ok"
     },
     {
-      "name": "[1440x900] 86%: chương \"enclosure\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] gioi-thieu:0.55 → cảnh \"hero\"",
       "pass": true,
-      "visible": [
-        "enclosure"
-      ],
-      "drawCalls": 33,
-      "triangles": 12530
+      "note": "shown=hero vis=visible calls=25 tris=11148"
     },
     {
-      "name": "[1440x900] 97%: chương \"final\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] gioi-thieu:0.55 model không đè chữ",
       "pass": true,
-      "visible": [
-        "final",
-        "final"
-      ],
-      "drawCalls": 27,
-      "triangles": 12692
+      "note": "ok"
     },
     {
-      "name": "[1440x900] 100%: chương \"final\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] Tab hero thu vào logo nav",
       "pass": true,
-      "visible": [
-        "final",
-        "final"
-      ],
-      "drawCalls": 27,
-      "triangles": 12692
+      "note": "{\"tab\":0,\"logo\":\"true\"}"
     },
     {
-      "name": "[1440x900] Chữ không chồng lên khung bao model, không tràn ngang",
+      "name": "[3D] tuyen-ngon:0.45 → cảnh \"statement\"",
       "pass": true,
-      "issues": []
+      "note": "shown=statement vis=visible calls=1 tris=12"
     },
     {
-      "name": "[1440x900] Cuộn ngược khôi phục đúng trạng thái trước đó",
+      "name": "[3D] tuyen-ngon:0.45 model không đè chữ",
       "pass": true,
-      "diffs": []
+      "note": "ok"
     },
     {
-      "name": "[1440x900] Nhảy từ cuối về đầu trả lại đúng hero",
+      "name": "[3D] Tuyên ngôn: chỉ khối kính gân dọc",
       "pass": true,
-      "jumpDiff": []
+      "note": "Glass"
     },
     {
-      "name": "[1440x900] Không có lỗi JS/console",
+      "name": "[3D] cau-tao:0.15 → cảnh \"exploded\"",
       "pass": true,
-      "errors": []
+      "note": "shown=exploded vis=visible calls=25 tris=11148"
     },
     {
-      "name": "[1280x720] 0%: chương \"hero\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] cau-tao:0.15 model không đè chữ",
       "pass": true,
-      "visible": [
-        "hero",
-        "hero"
-      ],
-      "drawCalls": 24,
-      "triangles": 12610
+      "note": "ok"
     },
     {
-      "name": "[1280x720] 14%: chương \"back\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] cau-tao:0.6 → cảnh \"exploded\"",
       "pass": true,
-      "visible": [
-        "back"
-      ],
-      "drawCalls": 24,
-      "triangles": 12610
+      "note": "shown=exploded vis=visible calls=25 tris=11148"
     },
     {
-      "name": "[1280x720] 24%: chương \"back\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] cau-tao:0.6 model không đè chữ",
       "pass": true,
-      "visible": [
-        "back"
-      ],
-      "drawCalls": 24,
-      "triangles": 12610
+      "note": "ok"
     },
     {
-      "name": "[1280x720] 42%: chương \"blueprint\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] Exploded: các lớp tách dần theo cuộn",
       "pass": true,
-      "visible": [
-        "blueprint",
-        "blueprint",
-        "blueprint",
-        "blueprint",
-        "blueprint"
-      ],
-      "drawCalls": 44,
-      "triangles": 12530
+      "note": "0.68"
     },
     {
-      "name": "[1280x720] 47%: chương \"blueprint\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] Exploded: chú thích + vạch 1px hiện theo lớp",
       "pass": true,
-      "visible": [
-        "blueprint",
-        "blueprint",
-        "blueprint",
-        "blueprint",
-        "blueprint",
-        "blueprint",
-        "blueprint"
-      ],
-      "drawCalls": 44,
-      "triangles": 12530
+      "note": "1.0 1.0 1.0 1.0 0.5 0.0"
     },
     {
-      "name": "[1280x720] 63%: chương \"driver\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] cau-tao:1 → cảnh \"exploded\"",
       "pass": true,
-      "visible": [
-        "driver"
-      ],
-      "drawCalls": 37,
-      "triangles": 12530
+      "note": "shown=exploded vis=visible calls=25 tris=11148"
     },
     {
-      "name": "[1280x720] 75%: chương \"pcb\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] cau-tao:1 model không đè chữ",
       "pass": true,
-      "visible": [
-        "pcb"
-      ],
-      "drawCalls": 38,
-      "triangles": 12530
+      "note": "ok"
     },
     {
-      "name": "[1280x720] 86%: chương \"enclosure\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] thong-so:0.1 → cảnh \"ẩn (canvas tạm dừng)\"",
       "pass": true,
-      "visible": [
-        "enclosure"
-      ],
-      "drawCalls": 33,
-      "triangles": 12530
+      "note": "shown=null vis=hidden"
     },
     {
-      "name": "[1280x720] 97%: chương \"final\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] vat-lieu:0.3 → cảnh \"ẩn (canvas tạm dừng)\"",
       "pass": true,
-      "visible": [
-        "final",
-        "final"
-      ],
-      "drawCalls": 27,
-      "triangles": 12692
+      "note": "shown=null vis=hidden"
     },
     {
-      "name": "[1280x720] 100%: chương \"final\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] phien-ban:0.35 → cảnh \"finish\"",
       "pass": true,
-      "visible": [
-        "final",
-        "final"
-      ],
-      "drawCalls": 27,
-      "triangles": 12692
+      "note": "shown=finish vis=visible calls=25 tris=11148"
     },
     {
-      "name": "[1280x720] Chữ không chồng lên khung bao model, không tràn ngang",
+      "name": "[3D] phien-ban:0.35 model không đè chữ",
       "pass": true,
-      "issues": []
+      "note": "ok"
     },
     {
-      "name": "[1280x720] Cuộn ngược khôi phục đúng trạng thái trước đó",
+      "name": "[3D] Chọn phiên bản → vật liệu model đổi (crossfade)",
       "pass": true,
-      "diffs": []
+      "note": "{\"graphite\":0.00007662401642553041,\"silver\":0.9999233759835745,\"walnut\":0}"
     },
     {
-      "name": "[1280x720] Nhảy từ cuối về đầu trả lại đúng hero",
+      "name": "[3D] khong-gian:0.3 → cảnh \"ẩn (canvas tạm dừng)\"",
       "pass": true,
-      "jumpDiff": []
+      "note": "shown=null vis=hidden"
     },
     {
-      "name": "[1280x720] Không có lỗi JS/console",
+      "name": "[3D] doi-tac:0.3 → cảnh \"ẩn (canvas tạm dừng)\"",
       "pass": true,
-      "errors": []
+      "note": "shown=null vis=hidden"
     },
     {
-      "name": "[1920x1080] 0%: chương \"hero\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] dat-lich:0.2 → cảnh \"ẩn (canvas tạm dừng)\"",
       "pass": true,
-      "visible": [
-        "hero",
-        "hero"
-      ],
-      "drawCalls": 24,
-      "triangles": 12610
+      "note": "shown=null vis=hidden"
     },
     {
-      "name": "[1920x1080] 14%: chương \"back\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] Ngoài vùng 3D: canvas không vẽ (tạm dừng)",
       "pass": true,
-      "visible": [
-        "back"
-      ],
-      "drawCalls": 24,
-      "triangles": 12610
+      "note": "0 frame/1s"
     },
     {
-      "name": "[1920x1080] 24%: chương \"back\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] Cuộn ngược về cau-tao:0.6: trạng thái y hệt",
       "pass": true,
-      "visible": [
-        "back"
-      ],
-      "drawCalls": 24,
-      "triangles": 12610
+      "note": "sai lệch tối đa 7.1e-5"
     },
     {
-      "name": "[1920x1080] 42%: chương \"blueprint\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] Cuộn ngược về gioi-thieu:0.55: trạng thái y hệt",
       "pass": true,
-      "visible": [
-        "blueprint",
-        "blueprint",
-        "blueprint",
-        "blueprint",
-        "blueprint"
-      ],
-      "drawCalls": 44,
-      "triangles": 12530
+      "note": "sai lệch tối đa 8.5e-5"
     },
     {
-      "name": "[1920x1080] 47%: chương \"blueprint\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] Thông số: vạch 1px vẽ dần theo cuộn",
       "pass": true,
-      "visible": [
-        "blueprint",
-        "blueprint",
-        "blueprint",
-        "blueprint",
-        "blueprint",
-        "blueprint",
-        "blueprint"
-      ],
-      "drawCalls": 44,
-      "triangles": 12530
+      "note": "0.09 → 0.75 → 1.00"
     },
     {
-      "name": "[1920x1080] 63%: chương \"driver\" hiển thị & trạng thái 3D đúng",
+      "name": "[3D] FPS khi cuộn (SwiftShader, chỉ tham khảo)",
       "pass": true,
-      "visible": [
-        "driver"
-      ],
-      "drawCalls": 37,
-      "triangles": 12530
+      "note": "3 fps"
     },
     {
-      "name": "[1920x1080] 75%: chương \"pcb\" hiển thị & trạng thái 3D đúng",
+      "name": "[desktop 3D] Không bo góc (trừ icon tròn)",
       "pass": true,
-      "visible": [
-        "pcb"
-      ],
-      "drawCalls": 38,
-      "triangles": 12530
+      "note": "ok"
     },
     {
-      "name": "[1920x1080] 86%: chương \"enclosure\" hiển thị & trạng thái 3D đúng",
+      "name": "[desktop 3D] Không shadow / glow / blur",
       "pass": true,
-      "visible": [
-        "enclosure"
-      ],
-      "drawCalls": 33,
-      "triangles": 12530
+      "note": "ok"
     },
     {
-      "name": "[1920x1080] 97%: chương \"final\" hiển thị & trạng thái 3D đúng",
+      "name": "[desktop 3D] Toàn bộ chữ in hoa",
       "pass": true,
-      "visible": [
-        "final",
-        "final"
-      ],
-      "drawCalls": 27,
-      "triangles": 12692
+      "note": "ok"
     },
     {
-      "name": "[1920x1080] 100%: chương \"final\" hiển thị & trạng thái 3D đúng",
+      "name": "[desktop 3D] Font weight ≤ 450",
       "pass": true,
-      "visible": [
-        "final",
-        "final"
-      ],
-      "drawCalls": 27,
-      "triangles": 12692
+      "note": "400"
     },
     {
-      "name": "[1920x1080] Chữ không chồng lên khung bao model, không tràn ngang",
+      "name": "[desktop 3D] Cỡ chữ chỉ lấy từ token",
       "pass": true,
-      "issues": []
+      "note": "11 / 14 / 31.7 / 85 / 142.6px"
     },
     {
-      "name": "[1920x1080] Cuộn ngược khôi phục đúng trạng thái trước đó",
+      "name": "[desktop 3D] Một easing duy nhất cho transition",
       "pass": true,
-      "diffs": []
+      "note": "cubic-bezier(0.7, 0, 0.3, 1)"
     },
     {
-      "name": "[1920x1080] Nhảy từ cuối về đầu trả lại đúng hero",
+      "name": "[desktop 3D] ≥ 3 phần tử cắt góc (notch)",
       "pass": true,
-      "jumpDiff": []
+      "note": "13"
     },
     {
-      "name": "[1920x1080] Không có lỗi JS/console",
+      "name": "[desktop 3D] Font Manrope",
       "pass": true,
-      "errors": []
+      "note": "Manrope"
     },
     {
-      "name": "Gallery kéo được bằng chuột",
+      "name": "[desktop 3D] Không cuộn ngang",
       "pass": true,
-      "before": 0,
-      "after": -1.0457699981778164
+      "note": "0px"
     },
     {
-      "name": "Gallery lặp liên tục (không lộ khoảng trống lớn sau nhiều vòng kéo)",
+      "name": "[3D] Không lỗi console / runtime",
       "pass": true,
-      "maxGap": 28.70947265625,
-      "reach": 1484.050048828125,
-      "width": 1440,
-      "H": 478.21875,
-      "offset": -23.11531377720579
+      "note": "ok"
     },
     {
-      "name": "Gallery điều khiển được bằng phím mũi tên",
+      "name": "[mobile] Không canvas / không preloader, dùng ảnh tĩnh",
       "pass": true,
-      "k0": -23.115953999633806,
-      "k1": -23.595953999633807
+      "note": "{\"mode\":\"static\",\"canvas\":false,\"scene\":false,\"preloader\":\"none\"}"
     },
     {
-      "name": "FPS khi cuộn toàn bộ phần kể chuyện (1440×900)",
+      "name": "[mobile] Không tải three.js",
       "pass": true,
-      "avgFps": 7.2,
-      "p95FrameMs": 266.7,
-      "frames": 497,
-      "seconds": 69.1,
-      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
-      "note": "7.2 fps trung bình, p95 266.7 ms — renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+      "note": "7 script, 473 KB"
     },
     {
-      "name": "Mobile: không tải three.js / model 3D, không có canvas",
+      "name": "[mobile] Ảnh tĩnh thay cho 3D đã tải",
       "pass": true,
-      "three": false,
-      "canvas": 0,
-      "mode": "static",
-      "overflowX": 0,
-      "heroImg": {
-        "complete": true,
-        "w": 390,
-        "src": "http://localhost:3000/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fhero.1f6xjo03h"
-      },
-      "buttons": [
-        [
-          134,
-          46
-        ],
-        [
-          147,
-          50
-        ],
-        [
-          167,
-          50
-        ],
-        [
-          48,
-          48
-        ],
-        [
-          48,
-          48
-        ],
-        [
-          147,
-          50
-        ],
-        [
-          175,
-          50
-        ]
-      ],
-      "glb": [],
-      "jsKB": 138
+      "note": "9/9"
     },
     {
-      "name": "Mobile: ảnh hero tải được, không tràn ngang",
+      "name": "[mobile] Hiệu ứng chỉ là fade, nội dung hiện đủ sau khi cuộn",
       "pass": true,
-      "complete": true,
-      "w": 390,
-      "src": "http://localhost:3000/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fhero.1f6xjo03h"
+      "note": "0 phần tử chưa hiện"
     },
     {
-      "name": "Mobile: nút bấm ≥ 44×44 px",
+      "name": "[mobile] Không dùng mặt nạ trượt chữ (chỉ fade)",
       "pass": true,
-      "buttons": [
-        [
-          134,
-          46
-        ],
-        [
-          147,
-          50
-        ],
-        [
-          167,
-          50
-        ],
-        [
-          48,
-          48
-        ],
-        [
-          48,
-          48
-        ],
-        [
-          147,
-          50
-        ],
-        [
-          175,
-          50
-        ]
-      ]
+      "note": "0"
     },
     {
-      "name": "Giảm chuyển động: không 3D, nội dung hiện ngay, không animation",
+      "name": "[mobile] Nhịp sáng/tối các section",
       "pass": true,
-      "three": false,
-      "canvas": 0,
-      "hidden": 0,
-      "anims": 0
+      "note": "LDDDLDDLD"
     },
     {
-      "name": "Bàn phím: thứ tự Tab hợp lý, có viền focus",
+      "name": "[mobile] Không bo góc (trừ icon tròn)",
       "pass": true,
-      "seq": [
-        {
-          "tag": "A",
-          "text": "Bỏ qua đến nội dung",
-          "outline": true
-        },
-        {
-          "tag": "A",
-          "text": "Bỏ qua phần trình diễn, đến thư viện ảnh",
-          "outline": true
-        },
-        {
-          "tag": "A",
-          "text": "Loa để bàn",
-          "outline": true
-        },
-        {
-          "tag": "A",
-          "text": "01Thiết kế",
-          "outline": true
-        },
-        {
-          "tag": "A",
-          "text": "02Thông số",
-          "outline": true
-        },
-        {
-          "tag": "A",
-          "text": "03Cấu tạo",
-          "outline": true
-        },
-        {
-          "tag": "A",
-          "text": "05Thư viện",
-          "outline": true
-        },
-        {
-          "tag": "A",
-          "text": "Mua ngay",
-          "outline": true
-        },
-        {
-          "tag": "BUTTON",
-          "text": "Ảnh trước",
-          "outline": true
-        },
-        {
-          "tag": "BUTTON",
-          "text": "Ảnh tiếp theo",
-          "outline": true
-        },
-        {
-          "tag": "DIV",
-          "text": "Các góc nhìn sản phẩm",
-          "outline": true
-        },
-        {
-          "tag": "A",
-          "text": "Mua ngay · Loa để bàn · Mua ngay · Loa đ",
-          "outline": true
-        }
-      ]
+      "note": "ok"
     },
     {
-      "name": "Điều hướng \"Thông số\" đưa tới cảnh bản vẽ",
+      "name": "[mobile] Không shadow / glow / blur",
       "pass": true,
-      "lines": 1
+      "note": "ok"
+    },
+    {
+      "name": "[mobile] Toàn bộ chữ in hoa",
+      "pass": true,
+      "note": "ok"
+    },
+    {
+      "name": "[mobile] Font weight ≤ 450",
+      "pass": true,
+      "note": "400"
+    },
+    {
+      "name": "[mobile] Cỡ chữ chỉ lấy từ token",
+      "pass": true,
+      "note": "11 / 14 / 22 / 48 / 72px"
+    },
+    {
+      "name": "[mobile] Một easing duy nhất cho transition",
+      "pass": true,
+      "note": "cubic-bezier(0.7, 0, 0.3, 1)"
+    },
+    {
+      "name": "[mobile] ≥ 3 phần tử cắt góc (notch)",
+      "pass": true,
+      "note": "12"
+    },
+    {
+      "name": "[mobile] Font Manrope",
+      "pass": true,
+      "note": "Manrope"
+    },
+    {
+      "name": "[mobile] Không cuộn ngang",
+      "pass": true,
+      "note": "0px"
+    },
+    {
+      "name": "[mobile] Không lỗi console / runtime",
+      "pass": true,
+      "note": "ok"
+    },
+    {
+      "name": "[giảm chuyển động] Nội dung hiện ngay, không 3D, không preloader",
+      "pass": true,
+      "note": "{\"canvas\":false,\"hidden\":0,\"preloader\":\"none\"}"
+    },
+    {
+      "name": "[desktop tĩnh] Không bo góc (trừ icon tròn)",
+      "pass": true,
+      "note": "ok"
+    },
+    {
+      "name": "[desktop tĩnh] Không shadow / glow / blur",
+      "pass": true,
+      "note": "ok"
+    },
+    {
+      "name": "[desktop tĩnh] Toàn bộ chữ in hoa",
+      "pass": true,
+      "note": "ok"
+    },
+    {
+      "name": "[desktop tĩnh] Font weight ≤ 450",
+      "pass": true,
+      "note": "400"
+    },
+    {
+      "name": "[desktop tĩnh] Cỡ chữ chỉ lấy từ token",
+      "pass": true,
+      "note": "11 / 14 / 31.7 / 85 / 142.6px"
+    },
+    {
+      "name": "[desktop tĩnh] Một easing duy nhất cho transition",
+      "pass": true,
+      "note": "cubic-bezier(0.7, 0, 0.3, 1)"
+    },
+    {
+      "name": "[desktop tĩnh] ≥ 3 phần tử cắt góc (notch)",
+      "pass": true,
+      "note": "12"
+    },
+    {
+      "name": "[desktop tĩnh] Font Manrope",
+      "pass": true,
+      "note": "Manrope"
+    },
+    {
+      "name": "[desktop tĩnh] Không cuộn ngang",
+      "pass": true,
+      "note": "0px"
+    },
+    {
+      "name": "[desktop] Nhịp sáng/tối: hero sáng→tối, vật liệu & đối tác sáng",
+      "pass": true,
+      "note": "LDDDLDDLD"
+    },
+    {
+      "name": "[bàn phím] Tab đầu tiên = link bỏ qua",
+      "pass": true,
+      "note": "skip-link"
+    },
+    {
+      "name": "[bàn phím] Menu mở/đóng (Enter, Esc) và trả focus",
+      "pass": true,
+      "note": "{\"open\":{\"exp\":\"true\",\"focus\":true},\"closed\":{\"exp\":\"false\",\"focus\":\"nav__burger\"}}"
+    },
+    {
+      "name": "[bàn phím] Chọn phiên bản bằng phím mũi tên",
+      "pass": true,
+      "note": "true:Silver02"
+    },
+    {
+      "name": "[form] Lỗi nhập liệu có aria-invalid, màu #ce1d20",
+      "pass": true,
+      "note": "{\"invalid\":2,\"color\":\"rgb(206, 29, 32)\"}"
     }
-  ]
+  ],
+  "budget": {
+    "drawCalls": 25,
+    "triangles": 11148
+  },
+  "fps": {
+    "swiftshader": 3
+  },
+  "summary": "77/77 đạt"
 }
