@@ -22,21 +22,52 @@ npm run build && npm start      # bản production
 | `npm run lint` / `npm run typecheck` | ESLint (core-web-vitals + TS) / kiểm tra kiểu |
 | `npm run verify` | Kiểm thử Playwright trên bản build: trình tự cảnh, chồng lấn chữ–model, cuộn ngược, gallery, mobile, giảm chuyển động, bàn phím, header bảo mật, FPS. Kết quả ở `reports/` |
 | `npm run lighthouse` | Lighthouse mobile + desktop (3 lần, lấy trung vị) → `reports/lighthouse-*.html` |
+| `npm run profile` | Spector.js: draw call / tam giác từng cảnh + payload + thời gian khởi tạo → `reports/profile.json` |
 | `npm run capture` | Render lại ảnh tĩnh (mobile/gallery/OG) từ cảnh 3D qua trang nội bộ `/capture` (chỉ có ở dev) |
 
 Công cụ debug: mở `/?debug` để thấy FPS và dữ liệu cảnh (`window.__story`, `window.__gallery`); `/?static` để ép chế độ ảnh tĩnh.
 
 ## Hành trình
 
-| Cảnh | Desktop 3D (scrub theo cuộn) | Mobile / giảm chuyển động |
+| Cảnh | Desktop 3D (cuộn → đích, cảnh đuổi theo bằng damping/spring) | Mobile / giảm chuyển động |
 |---|---|---|
-| Hero | Toàn bộ loa, chữ ở cột trái | Tiêu đề + ảnh hero |
-| 01 Thiết kế | Loa xoay từ mặt trước sang mặt sau | Ảnh mặt sau |
-| 02 Thông số | Chuyển sang bản vẽ kỹ thuật (nét + lưới + đường kích thước); thông số xuất hiện lần lượt ở hai cột, có đường dẫn tới đúng chi tiết | Ảnh bản vẽ + danh sách thông số |
-| 03 Cấu tạo | Góc nhìn sau-trên, nắp lưng tách ra để thấy bo mạch; highlight **củ loa → bo mạch → vỏ loa**: bộ phận đang giới thiệu hiện vật liệu đầy đủ, phần còn lại chuyển sang nét | Mỗi bộ phận một ảnh + chú thích vật liệu |
-| 04 Hoàn thiện | Loa đặt trên mặt phẳng, shader sàn (bóng tiếp xúc + sóng âm lan ra); nút Mua ngay | Ảnh + nút Mua ngay |
-| Thư viện | Grid ngẫu hứng lặp vô hạn, kéo chuột có quán tính, shader uốn cong + tách kênh màu theo vận tốc kéo | Dải cuộn ngang gốc (scroll-snap) |
+| Hero | Model được "in" ra khi tải trang: nét tự vẽ rồi mặt quét đi lên, mép cắt sáng ấm; vệt sáng softbox + bụi lơ lửng | Tiêu đề + ảnh hero |
+| 01 Thiết kế | Loa quay sang mặt sau (quay một chiều suốt câu chuyện), camera nhích gần để xem cổng | Ảnh mặt sau |
+| 02 Thông số | Mặt quét hạ từ đỉnh xuống: vật liệu tan thành nét bản vẽ đang tự vẽ; nền chuyển lạnh, lưới hiện; đường kích thước vẽ dần; thông số ra lần lượt ở hai cột có đường dẫn | Ảnh bản vẽ + danh sách thông số |
+| 03 Cấu tạo | **Exploded view**: 6 khối tách theo trục bằng spring; lần lượt **củ loa → bo mạch → vỏ loa** được "in" vật liệu, camera tiến về đúng bộ phận, các khối khác giữ nét; cuối cùng lắp lại | Mỗi bộ phận một ảnh + chú thích vật liệu |
+| 04 Hoàn thiện | Góc thấp chính diện, sàn phản chiếu với sóng âm lan ra làm méo ảnh phản chiếu, màng loa "thở" cùng nhịp; nền ấm trở lại; nút Mua ngay | Ảnh + nút Mua ngay |
+| Thanh tiến độ | Dải mảnh ở chân màn hình, tô màu theo cuộn, sáng chương hiện tại | — |
+| Thư viện | Grid ngẫu hứng lặp vô hạn, kéo có quán tính, parallax trong khung + uốn theo vận tốc kéo | Dải cuộn ngang gốc (scroll-snap) |
 | Đặt hàng | Giá, bảng thông số, nút Mua ngay lớn | như desktop |
+
+Chữ vào theo từng cảnh: tiêu đề được "lau" từ dưới lên (clip-path) cùng nhịp mặt quét, phần còn lại hiện dần theo thứ tự; khi đã hiện thì giữ nguyên, đủ lâu để đọc.
+
+## Kiến trúc cảnh 3D
+
+Một cảnh, một không khí ánh sáng (studio tối, một softbox), bảng màu hạn chế: than chì · champagne ấm · xanh bản vẽ.
+Mọi chuyển động đi qua damping (lerp theo thời gian) hoặc spring, không bao giờ nhảy cóc.
+
+| Đối tượng | Geometry | Vật liệu / shader | Tương tác | Chi phí đo được (Spector.js) |
+|---|---|---|---|---|
+| Loa: vỏ, mặt trước, núm, chân đế, nắp lưng, củ loa, bo mạch | Dựng thủ tục, gộp mesh theo vật liệu | Physical/Standard được patch: **scan-cut**, nhôm xước anisotropy, vỏ có micro-normal, màng loa rung | Cuộn → xoay 1 chiều, exploded (spring), quét cắt. Con trỏ → parallax | 12.5k tam giác, 20–40 draw call tuỳ cảnh |
+| Nét bản vẽ | Edges (> 35°) + đường kích thước | Nét **tự vẽ** + fresnel đường bao | Cuộn | 1 draw call/mesh, chỉ khi hiện |
+| Ánh sáng | Softbox + rim + kicker + hắt sáng → PMREM 128 px | Environment + 1 đèn chính cùng hướng softbox; ACES, sRGB đặt tường minh | — | ~280 ms một lần (SwiftShader) |
+| Nền | Quad full-screen | Vùng sáng đổi nhiệt màu theo chương, lưới bản vẽ, vignette, dither | Cuộn | 1 draw call |
+| Vệt sáng + bụi | Hình nón + 500 điểm | Shader cộng sáng, bụi chỉ sáng khi nằm trong vệt | Thời gian | 2 draw call, tắt ở cảnh kỹ thuật |
+| Sàn cảnh kết | Plane | **Reflector** nửa độ phân giải + gợn sóng làm méo phản chiếu | Thời gian | Cảnh nặng nhất: 47 draw call, 24k tam giác (gồm pass phản chiếu) |
+| Gallery | Plane / ô | Parallax trong khung + uốn theo vận tốc kéo | Kéo | Render chỉ khi đang chuyển động |
+
+**Shader (mỗi cái 2–3 dòng):**
+
+1. **Scan-cut** (`partRig.ts`) — mỗi vật liệu thật discard mọi điểm nằm trên một mặt phẳng ngang `uCut` (có nhiễu nhẹ để mép cắt hữu cơ); mép cắt cộng thêm ánh sáng ấm như vệt laser máy quét. Hạ mặt phẳng = vật liệu tan thành nét bản vẽ; nâng lên = vật liệu được "in" ra. Vật liệu luôn opaque nên không có lỗi sắp xếp trong suốt.
+2. **Nét tự vẽ** — mỗi đoạn cạnh mang `aOrder` (đoạn cao vẽ trước) và `aT` (0→1 dọc đoạn); fragment bỏ phần `aT` vượt tiến độ `uDraw`, đầu bút sáng hơn. Nét chỉ hiện phía trên mặt quét, nên nét và vật liệu luôn nối liền nhau.
+3. **Fresnel ghost** — cộng sáng theo `1 - |N·V|` để vẽ đường bao cho mặt cong (EdgesGeometry không bắt được), cũng bị cắt theo mặt quét.
+4. **Nền** — gradient Gauss quanh tâm vùng khung, pha giữa nhiệt ấm/lạnh theo `uWarmth`; lưới 24/120 px chỉ hiện ở chương bản vẽ; dither ±0.5/255 chống dải màu.
+5. **Sàn âm thanh** — Reflector render ảnh phản chiếu nửa độ phân giải; gợn sóng lan theo khoảng cách tới đế (SDF hình hộp bo góc) làm lệch toạ độ lấy mẫu, blur 5 mẫu tăng theo khoảng cách; màng loa rung cùng pha với gợn tại tâm.
+6. **Bụi** — điểm trôi theo thời gian, sáng lên khi nằm trong vệt sáng từ softbox; kích thước theo khoảng cách và DPR.
+7. **Gallery** — ảnh phóng nhẹ và trượt ngược theo vị trí ô (parallax khung cửa sổ); khi kéo nhanh ảnh co lại và gợn như lụa theo vận tốc.
+
+**Hiệu năng:** DPR tối đa 2, tự hạ xuống 1.5 khi FPS < 50 kéo dài 1 giây; `frameloop="demand"` (chỉ vẽ khi còn đang đuổi theo đích hoặc có hiệu ứng thời gian); dừng hẳn khi tab ẩn hoặc phần kể chuyện ra khỏi màn hình. Shader biên dịch bất đồng bộ trước khi hiện model. Không cấp phát object trong vòng render. Mọi geometry, vật liệu, texture và render target được giải phóng khi unmount.
 
 ## Kiến trúc
 
@@ -62,10 +93,10 @@ src/
 
 Các quyết định chính:
 
-- **Cuộn ngược luôn đúng**: trạng thái 3D là một object số được timeline GSAP tween; ScrollTrigger `scrub` điều khiển timeline. Không có callback một chiều nên mọi vị trí cuộn (kể cả nhảy thẳng) cho đúng một trạng thái.
+- **Cuộn ngược luôn đúng**: trạng thái ĐÍCH của cảnh 3D là một object số được timeline GSAP tween, gắn thẳng với vị trí cuộn (`scrub: true`). Không có callback một chiều nên mọi vị trí cuộn (kể cả nhảy thẳng) cho đúng một đích; cảnh hiển thị đuổi theo đích bằng damping/spring nên vẫn mượt.
 - **Chữ không che model**: mỗi cảnh khai báo vùng khung (`fx, fy, fw, fh`); camera tự tính khoảng cách để khối cầu bao của model nằm trọn trong vùng đó, còn chữ nằm ở cột riêng trong CSS. `npm run verify` đo khung bao thật của model trên màn hình và kiểm tra giao với từng khối chữ ở 3 kích thước màn hình.
 - **Không CLS, không tải thừa**: bố cục 3D/tĩnh do CSS media query quyết định từ lần vẽ đầu. Ảnh tĩnh nằm trong `<picture>` có nguồn 1×1 cho desktop 3D nên desktop không tải ảnh; mobile không tải three.js/R3F/GSAP (chunk động không bao giờ được yêu cầu).
-- **Hiệu năng 3D**: model placeholder gộp mesh theo vật liệu (tối đa 66 draw call / ~24k tam giác ở cảnh bản vẽ), ánh sáng môi trường dựng sẵn 64 px (không tải HDR), shader được biên dịch bất đồng bộ trước khi hiện model, khởi tạo chia nhỏ theo từng bước và chỉ bắt đầu khi trình duyệt rảnh, `frameloop="demand"` (chỉ vẽ khi cuộn, trừ sàn có sóng), dừng vẽ khi ra khỏi màn hình, DPR tối đa 1.75. Không dùng particle — không phục vụ câu chuyện đủ để đổi lấy chi phí.
+- **Hiệu năng 3D**: xem mục "Kiến trúc cảnh 3D" ở trên. Chunk 3D chỉ bắt đầu khởi tạo khi trình duyệt rảnh, các bước nặng được chia nhỏ (nhường luồng giữa mỗi bước).
 - **Giảm chuyển động**: `prefers-reduced-motion: reduce` → chế độ tĩnh, không animation/transition, nội dung hiện ngay.
 
 ## Bảo mật
@@ -83,25 +114,37 @@ Các quyết định chính:
 
 ## Kết quả kiểm tra (25/09/2026, trong container không có GPU)
 
-Số liệu thô: [`reports/verify-report.json`](./reports/verify-report.json), [`reports/lighthouse-summary.json`](./reports/lighthouse-summary.json). Ảnh chụp chọn lọc: [`docs/screenshots/`](./docs/screenshots).
+Số liệu thô: [`reports/verify-report.json`](./reports/verify-report.json), [`reports/lighthouse-summary.json`](./reports/lighthouse-summary.json), [`reports/profile.json`](./reports/profile.json). Ảnh chụp: [`docs/screenshots/`](./docs/screenshots), video: [`docs/demo/`](./docs/demo).
 
-- `npm run build`, `npm run lint`, `npm run typecheck`: không lỗi, không cảnh báo.
-- `npm run verify`: **55/55 đạt** — trình tự 10 mốc cảnh × 3 kích thước (1280×720, 1440×900, 1920×1080); chữ không giao khung bao model, không tràn ngang; cuộn ngược từng bước và nhảy thẳng từ cuối về đầu khôi phục đúng trạng thái; gallery kéo được, lặp qua hơn 2 chu kỳ không lộ khoảng trống, điều khiển được bằng phím; mobile không tải three.js/model, không có canvas (137 KB JS); giảm chuyển động hiện nội dung ngay, không có animation; thứ tự Tab và viền focus; header bảo mật; cache immutable.
-- **Lighthouse** (trung vị của 3 lần chạy):
+- `npm run build`, `npm run lint`, `npm run typecheck`: không lỗi.
+- `npm run verify`: **55/55 đạt** — 10 mốc cảnh × 3 kích thước màn hình (đo sau khi cảnh đã đứng yên); chữ không giao khung bao model; cuộn ngược từng bước và nhảy thẳng về đầu khôi phục đúng; gallery kéo được, lặp liên tục, điều khiển bằng phím; mobile không tải three.js/model; giảm chuyển động hiện nội dung ngay; bàn phím; header bảo mật; cache.
+
+**Ngân sách 3D — đo bằng Spector.js (1 frame/cảnh, 1440×900):**
+
+| Cảnh | Draw call | Tam giác | Ngân sách |
+|---|---|---|---|
+| Hero / Thiết kế | 24 | 12.6k | < 100 draw call, < 300k tam giác |
+| Bản vẽ | 44 | 12.5k | |
+| Exploded — củ loa | 37 | 12.5k | |
+| Exploded — bo mạch | 38 | 12.5k | |
+| Cảnh kết (có pass phản chiếu) | 47 | 24.2k | |
+
+- Payload 3D: model 0 KB (placeholder dựng bằng code, texture sinh bằng code). Khi có GLB thật, ngân sách là < 3 MB (Meshopt + KTX2). JS nhánh 3D: ~506 KB đã nén (Lighthouse), ~1.7 MB chưa nén.
+- Khởi tạo (User Timing, SwiftShader): dựng cảnh 105 ms, môi trường PMREM 278 ms, biên dịch shader 29 ms.
+
+**Lighthouse** (trung vị 3 lần):
 
 | Cấu hình | Performance | Accessibility | Best practices | SEO | LCP | TBT | CLS |
 |---|---|---|---|---|---|---|---|
-| Mobile (mặc định Lighthouse, 4G chậm) | 97 | 100 | 100 | 100 | 2.6 s | 40 ms | 0 |
-| Desktop, nhánh ảnh tĩnh* | 100 | 100 | 100 | 100 | 0.6 s | 0 ms | 0 |
-| Desktop, nhánh 3D (giả lập chuột) | 72 | 100 | 100 | 100 | 1.2 s | 730 ms | 0 |
+| Mobile (4G chậm) | 97 | 100 | 100 | 100 | 2.6 s | 40 ms | 0 |
+| Desktop, nhánh ảnh tĩnh | 100 | 100 | 100 | 100 | 0.6 s | 0 ms | 0 |
+| Desktop, nhánh 3D (giả lập chuột) | 67 | 100 | 100 | 100 | 0.7 s | 1.1 s | 0 |
 
-\* Chrome headless không có chuột nên Lighthouse desktop mặc định chạy nhánh ảnh tĩnh; lượt "nhánh 3D" dùng `--blink-settings` để giả lập chuột.
-
-- **FPS**: 9.6 fps trung bình khi cuộn hết phần kể chuyện (p95 317 ms/frame) — đo trên **SwiftShader (render bằng CPU)**, không đại diện cho máy desktop có GPU. Chưa đo được trên thiết bị desktop thật trong môi trường này; hãy mở `/?debug` trên máy đại diện để xem bộ đếm FPS.
+- **FPS**: 6 fps trung bình khi cuộn (p95 467 ms) — đo trên **SwiftShader (render bằng CPU)**, không đại diện cho M1 hay iPhone. Chưa đo được trên thiết bị thật; mở `/?debug` trên máy thật để xem FPS (DPR thích ứng sẽ tự hạ 2 → 1.5 nếu dưới 50 fps).
 
 ### Vấn đề còn lại
 
-- TBT của nhánh 3D (0.6–0.8 s) chủ yếu là dựng PMREM (~350 ms) và biên dịch shader lần đầu trên SwiftShader, cộng ~320 KB JS three.js/R3F/GSAP. Trên GPU thật các bước này nhanh hơn nhiều nhưng chưa được đo.
-- CSP còn `'unsafe-inline'` cho script (trang tĩnh, không có nonce).
-- Gallery trên mobile là dải cuộn ngang gốc, không lặp vô hạn (có chủ đích: thao tác gốc dễ dùng hơn trên cảm ứng, không có animation).
+- TBT nhánh 3D (0.5–1.1 s) tăng so với bản trước vì hero giờ render liên tục (intro, bụi, vệt sáng) — trên CPU mỗi frame tốn hàng trăm ms. Trên GPU thật một frame 24–47 draw call là rẻ, nhưng chưa được đo.
+- iPhone 12: theo yêu cầu ban đầu, mobile dùng ảnh tĩnh (không tải 3D) nên mục tiêu 30 fps trên iPhone không áp dụng cho bản hiện tại.
+- CSP còn `'unsafe-inline'` cho script (trang tĩnh, không nonce).
 - Mọi nội dung sản phẩm còn là placeholder — xem `ASSETS_NEEDED.md`.

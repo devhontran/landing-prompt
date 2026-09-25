@@ -506,6 +506,9 @@ dd {
     position: absolute;
     inset: 0;
   }
+  html.js:not([data-mode='static']) .story-progress {
+    display: block;
+  }
   .story__canvas {
     position: absolute;
     inset: 0;
@@ -534,6 +537,64 @@ dd {
     stroke: var(--blueprint);
     stroke-width: 1.5;
   }
+}
+
+/* Thanh tiến độ chương (desktop 3D) */
+.story-progress {
+  display: none;
+  position: absolute;
+  left: 6vw;
+  right: 6vw;
+  bottom: 22px;
+  z-index: 2;
+  pointer-events: none;
+}
+.story-progress__track {
+  height: 1px;
+  background: rgb(255 255 255 / 0.1);
+  overflow: hidden;
+}
+.story-progress__fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #f3e2c7);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.story-progress ol {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.story-progress a {
+  pointer-events: auto;
+  color: var(--subtle);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: color 0.4s var(--ease);
+}
+.story-progress__num {
+  color: rgb(217 185 138 / 0.5);
+  font-variant-numeric: tabular-nums;
+  transition: color 0.4s var(--ease);
+}
+.story-progress[data-active='0'] li:nth-child(1) a,
+.story-progress[data-active='1'] li:nth-child(2) a,
+.story-progress[data-active='2'] li:nth-child(3) a,
+.story-progress[data-active='3'] li:nth-child(4) a,
+.story-progress[data-active='4'] li:nth-child(5) a {
+  color: var(--fg);
+}
+.story-progress[data-active='0'] li:nth-child(1) .story-progress__num,
+.story-progress[data-active='1'] li:nth-child(2) .story-progress__num,
+.story-progress[data-active='2'] li:nth-child(3) .story-progress__num,
+.story-progress[data-active='3'] li:nth-child(4) .story-progress__num,
+.story-progress[data-active='4'] li:nth-child(5) .story-progress__num {
+  color: var(--accent);
 }
 
 @keyframes hero-in {

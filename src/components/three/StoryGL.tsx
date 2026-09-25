@@ -6,14 +6,14 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
+import * as THREE from 'three'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { model, specs, parts, type AnchorId } from '@/content/product'
 import { isDebug } from '@/lib/experience'
 import SpeakerScene, { type FrameInfo } from './SpeakerScene'
 import { buildStateTimeline, initialState, MARK } from './storyState'
-import { loadGlbSpeaker } from './loadGlb'
-import type { SpeakerBuild } from './proceduralSpeaker'
+import type { StageController } from './stageController'
 
 gsap.registerPlugin(ScrollTrigger)
 if (typeof window !== 'undefined') (window as unknown as { __threeLoaded: boolean }).__threeLoaded = true
@@ -36,20 +36,28 @@ export default function StoryGL() {
   const labelsRef = useRef<LabelBox[]>([])
   const partLinesRef = useRef<{ g: SVGGElement; anchor: AnchorId; text: HTMLElement }[]>([])
   const [ready, setReady] = useState(false)
-  const [build, setBuild] = useState<SpeakerBuild | null>(null)
   const [debug] = useState(isDebug)
-  const debugRef = useRef<{ frame?: FrameInfo; fps?: number }>({})
+  const debugRef = useRef<{ frame?: FrameInfo; fps?: number; dpr?: number }>({})
+  const controllerRef = useRef<StageController | null>(null)
+  // DPR thích ứng: tối đa 2; hạ xuống 1.5 khi FPS < 50 kéo dài 1 giây.
+  const [dpr, setDpr] = useState(() => Math.min(typeof window === 'undefined' ? 1 : window.devicePixelRatio, 2))
+  const [hidden, setHidden] = useState(false)
 
-  // Model thật (nếu đã cấu hình); lỗi → giữ model placeholder và báo trên console.
+  // Dừng hẳn vòng render khi tab bị ẩn.
   useEffect(() => {
-    if (!model.url) return
-    let alive = true
-    loadGlbSpeaker(model.url)
-      .then((b) => alive && setBuild(b))
-      .catch((e) => console.error('[speaker] Không nạp được model, dùng placeholder.', e))
-    return () => {
-      alive = false
+    const onVis = () => setHidden(document.hidden)
+    document.addEventListener('visibilitychange', onVis)
+    return () => document.removeEventListener('visibilitychange', onVis)
+  }, [])
+
+  // Parallax con trỏ (được damping trong StageController).
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      controllerRef.current?.setPointer((e.clientX / window.innerWidth) * 2 - 1, (e.clientY / window.innerHeight) * 2 - 1)
+      if (activeRef.current) invalidateRef.current()
     }
+    window.addEventListener('pointermove', onMove, { passive: true })
+    return () => window.removeEventListener('pointermove', onMove)
   }, [])
 
   // Timeline cuộn.
@@ -63,11 +71,17 @@ export default function StoryGL() {
       const tl = buildStateTimeline(gsap, state)
       const q = (sel: string) => story.querySelector<HTMLElement>(sel)
       const text = (id: string) => q(`[data-chapter="${id}"] .chapter__text`)
-      const IN = { opacity: 1, y: 0, duration: 2.2, ease: 'power2.out' }
-      const OUT = { opacity: 0, y: -20, duration: 2.2, ease: 'power2.in' }
-      const show = (el: Element | null, tIn: number, tOut?: number) => {
+      const OUT = { opacity: 0, y: -24, duration: 2.2, ease: 'power2.in' }
+      const HIDDEN_CLIP = 'inset(-25% -6% 100% -6%)'
+      const SHOWN_CLIP = 'inset(-25% -6% -25% -6%)'
+      /** Chữ vào theo nhịp của mặt quét: tiêu đề được "lau" từ dưới lên, phần còn lại hiện dần theo thứ tự. */
+      const show = (el: HTMLElement | null, tIn: number, tOut?: number) => {
         if (!el) return
-        tl.fromTo(el, { opacity: 0, y: 20 }, IN, tIn)
+        tl.fromTo(el, { opacity: 0, y: 0 }, { opacity: 1, duration: 0.6 }, tIn)
+        const heading = el.querySelector('h1, h2, h3')
+        if (heading) tl.fromTo(heading, { clipPath: HIDDEN_CLIP, y: 28 }, { clipPath: SHOWN_CLIP, y: 0, duration: 2.4, ease: 'power3.out' }, tIn)
+        const rest = [...el.children].filter((c) => c !== heading)
+        tl.fromTo(rest, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 1.8, ease: 'power2.out', stagger: 0.35 }, tIn + 0.5)
         if (tOut !== undefined) tl.to(el, OUT, tOut)
       }
 
@@ -100,8 +114,10 @@ export default function StoryGL() {
         trigger: story,
         start: 'top top',
         end: 'bottom bottom',
-        scrub: 0.6,
+        // Timeline bám thẳng vị trí cuộn (tất định); độ mượt do damping/spring trong cảnh 3D đảm nhiệm.
+        scrub: true,
         animation: tl,
+        onUpdate: (self) => updateProgress(self.progress),
         onToggle: (self) => {
           activeRef.current = self.isActive
           invalidateRef.current()
@@ -112,6 +128,23 @@ export default function StoryGL() {
         },
       })
       activeRef.current = st.isActive || st.progress === 0
+
+      // Thanh tiến độ chương (chỉ ghi DOM khi chương thay đổi).
+      const bar = document.querySelector<HTMLElement>('.story-progress')
+      const fill = bar?.querySelector<HTMLElement>('.story-progress__fill')
+      const chapterStarts = [MARK.hero, 10, 27, 52, 88]
+      let lastIdx = -1
+      function updateProgress(p: number) {
+        if (fill) fill.style.transform = `scaleX(${p.toFixed(4)})`
+        const t = p * 100
+        let idx = 0
+        chapterStarts.forEach((c, i) => t >= c && (idx = i))
+        if (bar && idx !== lastIdx) {
+          lastIdx = idx
+          bar.dataset.active = String(idx)
+        }
+      }
+      updateProgress(st.progress)
 
       // Điều hướng neo (#thiet-ke ...) → cuộn đến đúng mốc của timeline.
       const markFor: Record<string, number> = {
@@ -142,7 +175,18 @@ export default function StoryGL() {
       document.addEventListener('click', onClick)
       if (location.hash) requestAnimationFrame(() => scrollToMark(location.hash.slice(1), false))
 
-      if (debug) Object.assign(window, { __story: { state, tl, st, debug: debugRef.current } })
+      if (debug)
+        Object.assign(window, {
+          __story: {
+            state,
+            tl,
+            st,
+            debug: debugRef.current,
+            render: () => controllerRef.current?.render,
+            settled: () => !!controllerRef.current?.settled,
+            controller: () => controllerRef.current,
+          },
+        })
       return () => document.removeEventListener('click', onClick)
     }, story)
 
@@ -235,7 +279,7 @@ export default function StoryGL() {
       }
     }
     // Đường dẫn từ khối chữ tới bộ phận đang giới thiệu (cảnh cấu tạo).
-    if (state.explode > 0.05 || state.sShell < 0.95) {
+    if (state.explode > 0.05 || state.rShell < 0.95) {
       for (const p of partLinesRef.current) {
         const a = anchors[p.anchor]
         const heading = p.text.querySelector<HTMLElement>('h3') ?? p.text
@@ -253,22 +297,35 @@ export default function StoryGL() {
     <div ref={stageRef} className="story__stage" data-ready={ready || undefined}>
       <div className="story__canvas">
         <Canvas
-          frameloop="demand"
-          dpr={[1, 1.75]}
-          gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+          frameloop={hidden ? 'never' : 'demand'}
+          dpr={dpr}
+          flat={false}
+          gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
           camera={{ fov: 26, near: 0.1, far: 100, position: [0, 0, 10] }}
-          onCreated={({ invalidate }) => {
+          onCreated={({ gl, invalidate }) => {
+            // Đặt tường minh: sRGB + ACES (không dựa vào mặc định).
+            gl.outputColorSpace = THREE.SRGBColorSpace
+            gl.toneMapping = THREE.ACESFilmicToneMapping
+            gl.toneMappingExposure = 1
+            gl.setClearColor(0x0a0a0b, 1)
             invalidateRef.current = () => invalidate()
           }}
           aria-hidden="true"
         >
           <SpeakerScene
             state={state}
-            build={build}
+            modelUrl={model.url}
             onFrame={onFrame}
             measureModel={debug}
             isActive={() => activeRef.current}
-            onReady={() => setReady(true)}
+            onReady={(c) => {
+              controllerRef.current = c
+              setReady(true)
+            }}
+            onLowFps={() => {
+              setDpr((d) => Math.min(d, 1.5))
+              if (debug) debugRef.current.dpr = 1.5
+            }}
           />
         </Canvas>
       </div>

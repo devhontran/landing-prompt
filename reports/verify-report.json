@@ -1,6 +1,6 @@
 {
-  "base": "http://localhost:3200",
-  "date": "2026-09-25T15:13:47.400Z",
+  "base": "http://localhost:3000",
+  "date": "2026-09-25T16:40:56.926Z",
   "checks": [
     {
       "name": "Header bảo mật có mặt, không lộ X-Powered-By",
@@ -23,8 +23,8 @@
       "visible": [
         "hero"
       ],
-      "drawCalls": 1,
-      "triangles": 12
+      "drawCalls": 24,
+      "triangles": 12610
     },
     {
       "name": "[1440x900] 14%: chương \"back\" hiển thị & trạng thái 3D đúng",
@@ -32,8 +32,8 @@
       "visible": [
         "back"
       ],
-      "drawCalls": 26,
-      "triangles": 13860
+      "drawCalls": 24,
+      "triangles": 12610
     },
     {
       "name": "[1440x900] 24%: chương \"back\" hiển thị & trạng thái 3D đúng",
@@ -41,8 +41,8 @@
       "visible": [
         "back"
       ],
-      "drawCalls": 26,
-      "triangles": 13860
+      "drawCalls": 24,
+      "triangles": 12610
     },
     {
       "name": "[1440x900] 42%: chương \"blueprint\" hiển thị & trạng thái 3D đúng",
@@ -54,8 +54,8 @@
         "blueprint",
         "blueprint"
       ],
-      "drawCalls": 66,
-      "triangles": 24390
+      "drawCalls": 44,
+      "triangles": 12530
     },
     {
       "name": "[1440x900] 47%: chương \"blueprint\" hiển thị & trạng thái 3D đúng",
@@ -69,8 +69,8 @@
         "blueprint",
         "blueprint"
       ],
-      "drawCalls": 66,
-      "triangles": 24390
+      "drawCalls": 44,
+      "triangles": 12530
     },
     {
       "name": "[1440x900] 63%: chương \"driver\" hiển thị & trạng thái 3D đúng",
@@ -78,8 +78,8 @@
       "visible": [
         "driver"
       ],
-      "drawCalls": 53,
-      "triangles": 21658
+      "drawCalls": 37,
+      "triangles": 12530
     },
     {
       "name": "[1440x900] 75%: chương \"pcb\" hiển thị & trạng thái 3D đúng",
@@ -87,8 +87,8 @@
       "visible": [
         "pcb"
       ],
-      "drawCalls": 55,
-      "triangles": 23182
+      "drawCalls": 38,
+      "triangles": 12530
     },
     {
       "name": "[1440x900] 86%: chương \"enclosure\" hiển thị & trạng thái 3D đúng",
@@ -96,8 +96,8 @@
       "visible": [
         "enclosure"
       ],
-      "drawCalls": 49,
-      "triangles": 17802
+      "drawCalls": 33,
+      "triangles": 12530
     },
     {
       "name": "[1440x900] 97%: chương \"final\" hiển thị & trạng thái 3D đúng",
@@ -105,8 +105,8 @@
       "visible": [
         "final"
       ],
-      "drawCalls": 27,
-      "triangles": 13862
+      "drawCalls": 25,
+      "triangles": 11668
     },
     {
       "name": "[1440x900] 100%: chương \"final\" hiển thị & trạng thái 3D đúng",
@@ -114,8 +114,8 @@
       "visible": [
         "final"
       ],
-      "drawCalls": 27,
-      "triangles": 13862
+      "drawCalls": 25,
+      "triangles": 11668
     },
     {
       "name": "[1440x900] Chữ không chồng lên khung bao model, không tràn ngang",
@@ -143,8 +143,8 @@
       "visible": [
         "hero"
       ],
-      "drawCalls": 0,
-      "triangles": 0
+      "drawCalls": 24,
+      "triangles": 12610
     },
     {
       "name": "[1280x720] 14%: chương \"back\" hiển thị & trạng thái 3D đúng",
@@ -152,8 +152,8 @@
       "visible": [
         "back"
       ],
-      "drawCalls": 26,
-      "triangles": 13860
+      "drawCalls": 24,
+      "triangles": 12610
     },
     {
       "name": "[1280x720] 24%: chương \"back\" hiển thị & trạng thái 3D đúng",
@@ -161,8 +161,8 @@
       "visible": [
         "back"
       ],
-      "drawCalls": 26,
-      "triangles": 13860
+      "drawCalls": 24,
+      "triangles": 12610
     },
     {
       "name": "[1280x720] 42%: chương \"blueprint\" hiển thị & trạng thái 3D đúng",
@@ -174,8 +174,8 @@
         "blueprint",
         "blueprint"
       ],
-      "drawCalls": 66,
-      "triangles": 24390
+      "drawCalls": 44,
+      "triangles": 12530
     },
     {
       "name": "[1280x720] 47%: chương \"blueprint\" hiển thị & trạng thái 3D đúng",
@@ -189,8 +189,8 @@
         "blueprint",
         "blueprint"
       ],
-      "drawCalls": 66,
-      "triangles": 24390
+      "drawCalls": 44,
+      "triangles": 12530
     },
     {
       "name": "[1280x720] 63%: chương \"driver\" hiển thị & trạng thái 3D đúng",
@@ -198,8 +198,8 @@
       "visible": [
         "driver"
       ],
-      "drawCalls": 53,
-      "triangles": 21658
+      "drawCalls": 37,
+      "triangles": 12530
     },
     {
       "name": "[1280x720] 75%: chương \"pcb\" hiển thị & trạng thái 3D đúng",
@@ -207,8 +207,8 @@
       "visible": [
         "pcb"
       ],
-      "drawCalls": 55,
-      "triangles": 23182
+      "drawCalls": 38,
+      "triangles": 12530
     },
     {
       "name": "[1280x720] 86%: chương \"enclosure\" hiển thị & trạng thái 3D đúng",
@@ -216,8 +216,8 @@
       "visible": [
         "enclosure"
       ],
-      "drawCalls": 49,
-      "triangles": 17802
+      "drawCalls": 33,
+      "triangles": 12530
     },
     {
       "name": "[1280x720] 97%: chương \"final\" hiển thị & trạng thái 3D đúng",
@@ -225,8 +225,8 @@
       "visible": [
         "final"
       ],
-      "drawCalls": 27,
-      "triangles": 13862
+      "drawCalls": 25,
+      "triangles": 11668
     },
     {
       "name": "[1280x720] 100%: chương \"final\" hiển thị & trạng thái 3D đúng",
@@ -234,8 +234,8 @@
       "visible": [
         "final"
       ],
-      "drawCalls": 27,
-      "triangles": 13862
+      "drawCalls": 25,
+      "triangles": 11668
     },
     {
       "name": "[1280x720] Chữ không chồng lên khung bao model, không tràn ngang",
@@ -263,8 +263,8 @@
       "visible": [
         "hero"
       ],
-      "drawCalls": 1,
-      "triangles": 12
+      "drawCalls": 24,
+      "triangles": 12610
     },
     {
       "name": "[1920x1080] 14%: chương \"back\" hiển thị & trạng thái 3D đúng",
@@ -272,8 +272,8 @@
       "visible": [
         "back"
       ],
-      "drawCalls": 26,
-      "triangles": 13860
+      "drawCalls": 24,
+      "triangles": 12610
     },
     {
       "name": "[1920x1080] 24%: chương \"back\" hiển thị & trạng thái 3D đúng",
@@ -281,8 +281,8 @@
       "visible": [
         "back"
       ],
-      "drawCalls": 26,
-      "triangles": 13860
+      "drawCalls": 24,
+      "triangles": 12610
     },
     {
       "name": "[1920x1080] 42%: chương \"blueprint\" hiển thị & trạng thái 3D đúng",
@@ -294,8 +294,8 @@
         "blueprint",
         "blueprint"
       ],
-      "drawCalls": 66,
-      "triangles": 24390
+      "drawCalls": 44,
+      "triangles": 12530
     },
     {
       "name": "[1920x1080] 47%: chương \"blueprint\" hiển thị & trạng thái 3D đúng",
@@ -309,8 +309,8 @@
         "blueprint",
         "blueprint"
       ],
-      "drawCalls": 66,
-      "triangles": 24390
+      "drawCalls": 44,
+      "triangles": 12530
     },
     {
       "name": "[1920x1080] 63%: chương \"driver\" hiển thị & trạng thái 3D đúng",
@@ -318,8 +318,8 @@
       "visible": [
         "driver"
       ],
-      "drawCalls": 53,
-      "triangles": 21658
+      "drawCalls": 37,
+      "triangles": 12530
     },
     {
       "name": "[1920x1080] 75%: chương \"pcb\" hiển thị & trạng thái 3D đúng",
@@ -327,8 +327,8 @@
       "visible": [
         "pcb"
       ],
-      "drawCalls": 55,
-      "triangles": 23182
+      "drawCalls": 38,
+      "triangles": 12530
     },
     {
       "name": "[1920x1080] 86%: chương \"enclosure\" hiển thị & trạng thái 3D đúng",
@@ -336,8 +336,8 @@
       "visible": [
         "enclosure"
       ],
-      "drawCalls": 49,
-      "triangles": 17802
+      "drawCalls": 33,
+      "triangles": 12530
     },
     {
       "name": "[1920x1080] 97%: chương \"final\" hiển thị & trạng thái 3D đúng",
@@ -345,8 +345,8 @@
       "visible": [
         "final"
       ],
-      "drawCalls": 27,
-      "triangles": 13862
+      "drawCalls": 25,
+      "triangles": 11668
     },
     {
       "name": "[1920x1080] 100%: chương \"final\" hiển thị & trạng thái 3D đúng",
@@ -354,8 +354,8 @@
       "visible": [
         "final"
       ],
-      "drawCalls": 27,
-      "triangles": 13862
+      "drawCalls": 25,
+      "triangles": 11668
     },
     {
       "name": "[1920x1080] Chữ không chồng lên khung bao model, không tràn ngang",
@@ -381,32 +381,32 @@
       "name": "Gallery kéo được bằng chuột",
       "pass": true,
       "before": 0,
-      "after": -0.790509894574793
+      "after": -0.7914408513800635
     },
     {
       "name": "Gallery lặp liên tục (không lộ khoảng trống lớn sau nhiều vòng kéo)",
       "pass": true,
       "maxGap": 37.8125,
-      "reach": 1689.2874755859375,
+      "reach": 1502.4000244140625,
       "width": 1440,
       "H": 630,
-      "offset": -14.418563294119195
+      "offset": -14.11527916270392
     },
     {
       "name": "Gallery điều khiển được bằng phím mũi tên",
       "pass": true,
-      "k0": -14.426444646871825,
-      "k1": -14.906444646871826
+      "k0": -14.12698412698414,
+      "k1": -14.606984126984141
     },
     {
       "name": "FPS khi cuộn toàn bộ phần kể chuyện (1440×900)",
       "pass": true,
-      "avgFps": 9.6,
-      "p95FrameMs": 316.6,
-      "frames": 416,
-      "seconds": 43.4,
+      "avgFps": 5.9,
+      "p95FrameMs": 450,
+      "frames": 408,
+      "seconds": 68.6,
       "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
-      "note": "9.6 fps trung bình, p95 316.6 ms — renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+      "note": "5.9 fps trung bình, p95 450 ms — renderer: ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
     },
     {
       "name": "Mobile: không tải three.js / model 3D, không có canvas",
@@ -418,7 +418,7 @@
       "heroImg": {
         "complete": true,
         "w": 390,
-        "src": "http://localhost:3200/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fhero.03ilvlomj"
+        "src": "http://localhost:3000/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fhero.1f6xjo03h"
       },
       "buttons": [
         [
@@ -446,7 +446,7 @@
       "pass": true,
       "complete": true,
       "w": 390,
-      "src": "http://localhost:3200/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fhero.03ilvlomj"
+      "src": "http://localhost:3000/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fhero.1f6xjo03h"
     },
     {
       "name": "Mobile: nút bấm ≥ 44×44 px",

@@ -25,6 +25,7 @@ const fragment = /* glsl */ `
   uniform float uVel;
   uniform float uReady;
   uniform vec2 uSize;
+  uniform float uPar;
   varying vec2 vUv;
   float roundedMask(vec2 uv, vec2 size, float r) {
     vec2 p = (uv - 0.5) * size;
@@ -33,14 +34,15 @@ const fragment = /* glsl */ `
     return 1.0 - smoothstep(-1.0, 0.5, d);
   }
   void main() {
-    float zoom = 1.0 - min(abs(uVel), 1.0) * 0.06;
+    // Parallax trong khung: ảnh phóng 1/0.86 và trượt ngược hướng theo vị trí ô trên màn hình (uPar),
+    // khi kéo nhanh ảnh co nhẹ và gợn như tấm lụa theo vận tốc — không tách kênh màu.
+    float v = clamp(uVel, -1.0, 1.0);
+    float zoom = 0.86 - abs(v) * 0.04;
     vec2 uv = (vUv - 0.5) * uCover * zoom + 0.5;
-    float shift = uVel * 0.012;
-    vec3 col;
-    col.r = texture2D(uMap, uv + vec2(shift, 0.0)).r;
-    col.g = texture2D(uMap, uv).g;
-    col.b = texture2D(uMap, uv - vec2(shift, 0.0)).b;
-    col *= 1.0 - min(abs(uVel), 1.0) * 0.15;
+    uv.x += uPar * 0.06 * uCover.x;
+    uv.y += sin(vUv.x * 3.14159) * v * 0.018;
+    vec3 col = texture2D(uMap, uv).rgb;
+    col *= 1.0 - abs(v) * 0.12;
     // Nâng nhẹ vùng đen để ô ảnh tách khỏi nền trang.
     col = mix(vec3(0.0045), vec3(1.0), col);
     gl_FragColor = vec4(col, uReady * roundedMask(vUv, uSize, 14.0));
@@ -83,6 +85,7 @@ export class GalleryGL {
           uView: this.uniformsView,
           uReady: { value: 0 },
           uSize: { value: new THREE.Vector2(1, 1) },
+          uPar: { value: 0 },
         },
       })
       const m = new THREE.Mesh(this.geometry, mat)
@@ -149,6 +152,7 @@ export class GalleryGL {
       u.uMap.value = tex
       u.uReady.value = 1
       u.uSize.value.set(r.w, r.h)
+      u.uPar.value = THREE.MathUtils.clamp(((r.x + r.w / 2) / this.width) * 2 - 1, -1.3, 1.3)
       const imgAspect = this.aspects[r.imageIndex] || 0.8
       const tileAspect = r.w / r.h
       if (imgAspect > tileAspect) u.uCover.value.set(tileAspect / imgAspect, 1)

@@ -20,12 +20,12 @@ export const PRESETS: Record<string, Preset> = {
   final: { t: 100, set: { fy: 0.46 } },
   'view-1': { set: { rotY: 0, pitch: 0.04 } },
   'view-2': { set: { rotY: -0.62, pitch: 0.14 } },
-  'view-3': { set: { rotY: -Math.PI / 2, pitch: 0.05 } },
+  'view-3': { t: 57, set: { radius: 2.1 } },
   'view-4': { set: { rotY: Math.PI - 0.35, pitch: 0.12 } },
-  'view-5': { set: { rotY: -0.35, pitch: 0.95, targetY: 1.05, targetZ: -0.2, radius: 0.55 } },
-  'view-6': { set: { rotY: -0.25, pitch: 0.06, targetY: -0.2, targetZ: 0.6, radius: 0.62 } },
+  'view-5': { set: { rotY: -0.35, pitch: 0.95, focusY: 1.05, focusZ: -0.22, radius: 0.55 } },
+  'view-6': { set: { rotY: -0.25, pitch: 0.06, focusY: -0.2, focusZ: 0.6, radius: 0.62 } },
   'view-7': { t: 100, set: { fy: 0.48, fh: 0.7 } },
-  'view-8': { set: { rotY: 0.55, pitch: -0.12, targetY: 0.1 } },
+  'view-8': { set: { rotY: 0.55, pitch: -0.12, focusY: 0.1 } },
 }
 
 export default function CaptureClient() {
@@ -54,7 +54,7 @@ export default function CaptureClient() {
         camera={{ fov: 26, near: 0.1, far: 100, position: [0, 0, 10] }}
         style={{ width: w, height: h }}
       >
-        <SpeakerScene state={state} onFrame={() => frames < 5 && setFrames((f) => f + 1)} />
+        <SpeakerScene state={state} snap onFrame={() => frames < 5 && setFrames((f) => f + 1)} />
       </Canvas>
     </div>
   )

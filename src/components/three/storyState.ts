@@ -1,7 +1,14 @@
 /**
- * Trạng thái cảnh 3D là một object số thuần. Timeline GSAP (scrub theo cuộn) tween các số này,
- * còn vòng render chỉ đọc chúng. Vì trạng thái là hàm thuần của tiến độ cuộn, cuộn ngược luôn
- * khôi phục đúng trạng thái trước đó (không có callback một chiều).
+ * Trạng thái ĐÍCH của cảnh 3D là một object số thuần, do timeline GSAP gắn trực tiếp với vị trí cuộn
+ * (scrub: true → hàm thuần của tiến độ cuộn, cuộn ngược luôn khôi phục đúng). Vòng render
+ * (stageController) không dùng trực tiếp giá trị này mà đuổi theo bằng damping/spring
+ * → chuyển động liên tục, có quán tính, không bao giờ giật cục.
+ *
+ * Nhịp camera — mỗi lần di chuyển có lý do:
+ *  hero → loa quay dần 360° theo MỘT chiều suốt câu chuyện, mỗi chương lộ ra một mặt:
+ *  mặt trước (hero) → mặt sau (thiết kế) → sau-trái (bản vẽ: thấy cổng + kích thước)
+ *  → nghiêng trước-trái (exploded: trục tách rời trải ngang màn hình) → camera tiến về từng bộ phận đang kể
+ *  → lùi ra khi lắp lại → góc thấp chính diện (cảnh kết, "chân dung" sản phẩm).
  */
 import type { gsap as GSAP } from 'gsap'
 
@@ -10,9 +17,10 @@ export type StoryState = {
   rotY: number
   /** Góc nâng camera (rad). */
   pitch: number
-  /** Tâm nhìn (không gian thế giới). */
-  targetY: number
-  targetZ: number
+  /** Điểm camera nhìn vào, theo toạ độ LOCAL của loa (tự xoay theo model). */
+  focusX: number
+  focusY: number
+  focusZ: number
   /** Bán kính khối cầu bao cần đặt vừa vùng khung. */
   radius: number
   /** Vùng khung trên màn hình (tỷ lệ 0..1): tâm x/y, rộng/cao. Chữ được bố trí ngoài vùng này. */
@@ -20,47 +28,57 @@ export type StoryState = {
   fy: number
   fw: number
   fh: number
-  /** Mức "vật liệu đầy đủ" của từng bộ phận (0 = nét bản vẽ). */
-  sDriver: number
-  sPcb: number
-  sShell: number
-  sBack: number
-  /** Độ đậm nét tối đa, lưới nền, đường kích thước. */
+  /** Mức lộ vật liệu của từng bộ phận (vị trí mặt phẳng quét): 1 = vật liệu, 0 = nét bản vẽ. */
+  rDriver: number
+  rPcb: number
+  rShell: number
+  rBack: number
+  /** Độ đậm nét, tiến độ "tự vẽ" nét, đường kích thước (vẽ dần), lưới nền. */
   lines: number
-  grid: number
+  draw: number
   dims: number
-  /** Nắp lưng tách ra (0..1). */
+  grid: number
+  /** Nhiệt màu nền: -1 lạnh (kỹ thuật) … 1 ấm (studio). */
+  warmth: number
+  /** Tách rời các khối (exploded view), 0..1 — render bằng spring. */
   explode: number
-  /** Sàn shader cảnh kết. */
+  /** Sàn phản chiếu, bụi trong vệt sáng, biên độ rung màng loa + sóng sàn. */
   floor: number
+  dust: number
+  pulse: number
 }
 
 export const initialState = (): StoryState => ({
   rotY: -0.42,
   pitch: 0.1,
-  targetY: 0,
-  targetZ: 0,
+  focusX: 0,
+  focusY: 0,
+  focusZ: 0,
   radius: 1.62,
   fx: 0.68,
   fy: 0.54,
   fw: 0.46,
   fh: 0.74,
-  sDriver: 1,
-  sPcb: 1,
-  sShell: 1,
-  sBack: 1,
+  rDriver: 1,
+  rPcb: 1,
+  rShell: 1,
+  rBack: 1,
   lines: 0,
-  grid: 0,
+  draw: 0,
   dims: 0,
+  grid: 0,
+  warmth: 1,
   explode: 0,
   floor: 0,
+  dust: 1,
+  pulse: 0,
 })
 
 /** Vùng khung cho từng cảnh — đồng bộ với bố cục chữ trong globals.css. */
 const FRAME = {
   side: { fx: 0.68, fy: 0.54, fw: 0.46, fh: 0.74 },
   blueprint: { fx: 0.5, fy: 0.56, fw: 0.36, fh: 0.7 },
-  construct: { fx: 0.68, fy: 0.54, fw: 0.46, fh: 0.76 },
+  construct: { fx: 0.67, fy: 0.53, fw: 0.5, fh: 0.76 },
 }
 
 /** Mốc thời gian (đơn vị timeline, tổng = 100). Dùng chung cho chữ và điều hướng. */
@@ -75,45 +93,55 @@ export const MARK = {
   end: 100,
 } as const
 
+const TAU = Math.PI * 2
+
 export function buildStateTimeline(gsap: typeof GSAP, s: StoryState) {
   const tl = gsap.timeline({ defaults: { ease: 'none' }, paused: true })
   const ease = 'power2.inOut'
   tl.addLabel('hero', MARK.hero)
 
-  // 1. Xoay từ mặt trước sang mặt sau.
-  tl.to(s, { rotY: Math.PI - 0.42, pitch: 0.14, duration: 22, ease }, 4)
+  // 1. Quay từ mặt trước sang mặt sau, camera nhích gần để xem chi tiết cổng.
+  tl.to(s, { rotY: Math.PI - 0.42, pitch: 0.15, radius: 1.55, duration: 22, ease }, 3)
+  tl.to(s, { dust: 0.35, duration: 10 }, 12)
   tl.addLabel('back', MARK.back)
 
-  // 2. Chuyển sang bản vẽ kỹ thuật.
-  tl.to(s, { rotY: Math.PI + 0.62, pitch: 0.2, radius: 1.75, ...FRAME.blueprint, duration: 8, ease }, 28)
-  tl.to(s, { sDriver: 0, sPcb: 0, sShell: 0, sBack: 0, lines: 1, duration: 6, ease }, 29)
-  tl.to(s, { grid: 1, duration: 6 }, 30)
-  tl.to(s, { dims: 1, duration: 4 }, 33)
+  // 2. Bản vẽ: mặt quét hạ từ đỉnh xuống, vật liệu nhường chỗ cho nét tự vẽ; nền chuyển lạnh.
+  tl.to(s, { rotY: Math.PI + 0.62, pitch: 0.2, radius: 1.75, ...FRAME.blueprint, duration: 9, ease }, 27)
+  tl.to(s, { dust: 0, duration: 3 }, 26)
+  tl.to(s, { lines: 1, duration: 1.5 }, 27.5)
+  tl.to(s, { draw: 1, duration: 8 }, 27.5)
+  tl.to(s, { rDriver: 0, rPcb: 0, rShell: 0, rBack: 0, duration: 7, ease: 'power1.inOut' }, 28.5)
+  tl.to(s, { grid: 1, warmth: -1, duration: 6 }, 28)
+  tl.to(s, { dims: 1, duration: 5 }, 33)
   tl.addLabel('blueprint', MARK.blueprint)
 
-  // 3. Cảnh cấu tạo: góc nhìn sau-trên để thấy bo mạch, nắp lưng tách ra.
-  tl.to(s, { dims: 0, duration: 3 }, 52)
-  tl.to(s, { grid: 0.35, lines: 0.75, duration: 5 }, 53)
-  tl.to(s, { rotY: Math.PI - 0.72, pitch: 0.42, targetZ: -0.45, radius: 2.2, ...FRAME.construct, duration: 7, ease }, 53)
-  tl.to(s, { explode: 1, duration: 6, ease }, 55)
-  // 3.1 Củ loa
-  tl.to(s, { sDriver: 1, duration: 3, ease }, 58)
+  // 3. Exploded view: quay nghiêng trước-trái để trục tách rời trải ngang, các khối tách theo spring.
+  tl.to(s, { dims: 0, duration: 3 }, 51)
+  tl.to(s, { grid: 0.3, warmth: -0.35, duration: 6 }, 52)
+  tl.to(s, { rotY: TAU - 1.15, pitch: 0.3, radius: 2.05, ...FRAME.construct, duration: 8, ease }, 52)
+  tl.to(s, { explode: 1, duration: 6, ease }, 54)
+  // 3.1 Củ loa: vật liệu "in" dần từ dưới lên, camera tiến về phía củ loa.
+  tl.to(s, { rDriver: 1, duration: 4, ease: 'power1.inOut' }, 58)
+  tl.to(s, { focusY: -0.1, focusZ: 0.45, radius: 1.9, pitch: 0.2, duration: 5, ease }, 58)
   tl.addLabel('driver', MARK.driver)
-  // 3.2 Bo mạch
-  tl.to(s, { sDriver: 0, duration: 3, ease }, 68)
-  tl.to(s, { sPcb: 1, duration: 3, ease }, 69)
-  tl.to(s, { rotY: Math.PI - 0.52, pitch: 0.36, duration: 6, ease }, 67)
+  // 3.2 Bo mạch: quay lại để mặt linh kiện hướng về camera.
+  tl.to(s, { rDriver: 0, duration: 3, ease: 'power1.inOut' }, 67)
+  tl.to(s, { rotY: Math.PI + 0.9, pitch: 0.34, focusY: 0, focusZ: -0.5, duration: 7, ease }, 67)
+  tl.to(s, { rPcb: 1, duration: 4, ease: 'power1.inOut' }, 69)
   tl.addLabel('pcb', MARK.pcb)
-  // 3.3 Vỏ loa: nắp lưng khép lại, vỏ hiện vật liệu đầy đủ.
-  tl.to(s, { sPcb: 0, duration: 3, ease }, 79)
-  tl.to(s, { sShell: 1, sBack: 1, duration: 4, ease }, 80)
-  tl.to(s, { explode: 0, targetZ: 0, radius: 1.8, duration: 5, ease }, 80)
+  // 3.3 Vỏ loa: lùi ra, vỏ hiện vật liệu, các khối lắp lại.
+  tl.to(s, { rPcb: 0, duration: 3, ease: 'power1.inOut' }, 77.5)
+  tl.to(s, { rotY: Math.PI + 1.46, pitch: 0.24, focusZ: 0, radius: 2.0, duration: 6, ease }, 78)
+  tl.to(s, { rShell: 1, rBack: 1, duration: 4, ease: 'power1.inOut' }, 79.5)
+  tl.to(s, { explode: 0, duration: 4.5, ease }, 80.5)
+  tl.to(s, { rDriver: 1, rPcb: 1, duration: 1 }, 86)
   tl.addLabel('enclosure', MARK.enclosure)
 
-  // 4. Cảnh kết: loa đặt trên mặt phẳng.
-  tl.to(s, { sDriver: 1, sPcb: 1, lines: 0, grid: 0, duration: 4, ease }, 88)
-  tl.to(s, { rotY: 2 * Math.PI - 0.5, pitch: 0.16, targetY: -0.25, radius: 1.9, ...FRAME.side, duration: 7, ease }, 88)
-  tl.to(s, { floor: 1, duration: 5, ease }, 90)
+  // 4. Cảnh kết: góc thấp chính diện, sàn phản chiếu, bụi trong vệt sáng, màng loa "thở".
+  tl.to(s, { lines: 0, grid: 0, duration: 3 }, 87)
+  tl.to(s, { rotY: TAU - 0.5, pitch: 0.1, focusY: -0.25, radius: 1.9, ...FRAME.side, duration: 7, ease }, 88)
+  tl.to(s, { floor: 1, warmth: 1, dust: 1, duration: 5 }, 89)
+  tl.to(s, { pulse: 1, duration: 4 }, 92)
   tl.addLabel('final', MARK.final)
   tl.to({}, { duration: 0.001 }, MARK.end)
   return tl

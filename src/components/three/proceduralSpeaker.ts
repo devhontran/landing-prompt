@@ -8,26 +8,69 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import type { AnchorId } from '@/content/product'
+import { createLineMaterial, withDrawAttributes } from './partRig'
 
 export const BODY = { w: 1.6, h: 2.3, d: 1.5, r: 0.22 }
 const HALF_D = BODY.d / 2
 
 type MatKey = keyof ReturnType<typeof createMaterials>
 
-function createMaterials(pcbMap: THREE.Texture) {
+function createMaterials(pcbMap: THREE.Texture, micro: THREE.Texture) {
+  const cone = new THREE.MeshStandardMaterial({ color: 0x1f1f21, roughness: 0.82, metalness: 0.02, side: THREE.DoubleSide })
+  cone.userData.pulse = true // màng loa rung nhẹ ở cảnh kết (partRig.ts)
   return {
-    shell: new THREE.MeshPhysicalMaterial({ color: 0x1d1e21, roughness: 0.62, metalness: 0.15, clearcoat: 0.25, clearcoatRoughness: 0.5 }),
-    front: new THREE.MeshStandardMaterial({ color: 0x141517, roughness: 0.85, metalness: 0.05 }),
-    alu: new THREE.MeshStandardMaterial({ color: 0xc9c6c0, roughness: 0.32, metalness: 1 }),
-    darkAlu: new THREE.MeshStandardMaterial({ color: 0x3a3b3e, roughness: 0.4, metalness: 1, side: THREE.DoubleSide }),
-    cone: new THREE.MeshStandardMaterial({ color: 0x232325, roughness: 0.78, metalness: 0.05, side: THREE.DoubleSide }),
-    rubber: new THREE.MeshStandardMaterial({ color: 0x121213, roughness: 0.95, metalness: 0, side: THREE.DoubleSide }),
-    magnet: new THREE.MeshStandardMaterial({ color: 0x2c2d30, roughness: 0.45, metalness: 0.8 }),
-    pcb: new THREE.MeshStandardMaterial({ map: pcbMap, roughness: 0.55, metalness: 0.2 }),
-    chip: new THREE.MeshStandardMaterial({ color: 0x0f0f10, roughness: 0.4, metalness: 0.2 }),
-    cap: new THREE.MeshStandardMaterial({ color: 0x2a3f5c, roughness: 0.35, metalness: 0.3 }),
-    gold: new THREE.MeshStandardMaterial({ color: 0xc8a25a, roughness: 0.3, metalness: 1 }),
+    // Vỏ: nhựa/nhôm phủ mờ, có vân micro (normal map sinh bằng code) để bắt vệt softbox.
+    shell: new THREE.MeshPhysicalMaterial({
+      color: 0x1b1c1f, roughness: 0.5, metalness: 0.2, normalMap: micro, normalScale: new THREE.Vector2(0.12, 0.12),
+      clearcoat: 0.35, clearcoatRoughness: 0.38, envMapIntensity: 1.1,
+    }),
+    front: new THREE.MeshStandardMaterial({ color: 0x121315, roughness: 0.9, metalness: 0.0 }),
+    // Nhôm xước: anisotropy theo hướng UV (vòng tròn quanh xuyến / núm).
+    alu: new THREE.MeshPhysicalMaterial({ color: 0xd4d0c8, roughness: 0.3, metalness: 1, anisotropy: 0.75, envMapIntensity: 1.2 }),
+    darkAlu: new THREE.MeshPhysicalMaterial({ color: 0x3a3b3e, roughness: 0.38, metalness: 1, anisotropy: 0.5, side: THREE.DoubleSide }),
+    cone,
+    rubber: new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.95, metalness: 0, side: THREE.DoubleSide }),
+    magnet: new THREE.MeshStandardMaterial({ color: 0x2c2d30, roughness: 0.42, metalness: 0.85 }),
+    pcb: new THREE.MeshStandardMaterial({ map: pcbMap, roughness: 0.5, metalness: 0.25 }),
+    chip: new THREE.MeshStandardMaterial({ color: 0x0e0e0f, roughness: 0.35, metalness: 0.2 }),
+    cap: new THREE.MeshStandardMaterial({ color: 0x28405f, roughness: 0.3, metalness: 0.35 }),
+    gold: new THREE.MeshStandardMaterial({ color: 0xc8a25a, roughness: 0.28, metalness: 1 }),
   }
+}
+
+/** Normal map vi mô dạng hạt (tileable), 128², không cần tải file. */
+function createMicroNormal(size = 128): THREE.Texture {
+  const rnd = prng(11)
+  const h = new Float32Array(size * size).map(() => rnd())
+  const at = (x: number, y: number) => h[((y + size) % size) * size + ((x + size) % size)]
+  const b = new Float32Array(size * size)
+  for (let y = 0; y < size; y++)
+    for (let x = 0; x < size; x++) {
+      let a = 0
+      for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) a += at(x + i, y + j)
+      b[y * size + x] = a / 9
+    }
+  const bt = (x: number, y: number) => b[((y + size) % size) * size + ((x + size) % size)]
+  const data = new Uint8Array(size * size * 4)
+  for (let y = 0; y < size; y++)
+    for (let x = 0; x < size; x++) {
+      const dx = (bt(x + 1, y) - bt(x - 1, y)) * 6
+      const dy = (bt(x, y + 1) - bt(x, y - 1)) * 6
+      const l = Math.hypot(dx, dy, 1)
+      const i = (y * size + x) * 4
+      data[i] = ((-dx / l) * 0.5 + 0.5) * 255
+      data[i + 1] = ((-dy / l) * 0.5 + 0.5) * 255
+      data[i + 2] = ((1 / l) * 0.5 + 0.5) * 255
+      data[i + 3] = 255
+    }
+  const tex = new THREE.DataTexture(data, size, size)
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+  tex.repeat.set(3, 3)
+  tex.magFilter = THREE.LinearFilter
+  tex.minFilter = THREE.LinearMipmapLinearFilter
+  tex.generateMipmaps = true
+  tex.needsUpdate = true
+  return tex
 }
 
 /** Bộ sinh số giả ngẫu nhiên cố định để ảnh chụp luôn giống nhau. */
@@ -132,6 +175,16 @@ class Bucket {
 
 const T = (x = 0, y = 0, z = 0) => new THREE.Matrix4().makeTranslation(x, y, z)
 
+/** Hướng tách rời (exploded view) của từng khối, theo toạ độ local của loa. Model .glb khai báo bằng extras `explode: [x, y, z]`. */
+export const EXPLODE = {
+  front: [0, 0, 1.0],
+  driver: [0, 0, 0.5],
+  pcb: [0, 0, -0.55],
+  backPanel: [0, 0, -1.1],
+  knob: [0, 0.45, 0],
+  plinth: [0, -0.4, 0],
+} as const
+
 export type SpeakerBuild = {
   root: THREE.Group
   parts: { driver: THREE.Object3D; pcb: THREE.Object3D; enclosure: THREE.Object3D; backPanel: THREE.Object3D }
@@ -142,10 +195,11 @@ export type SpeakerBuild = {
 
 export function buildProceduralSpeaker(): SpeakerBuild {
   const pcbTex = createPcbTexture()
-  const mats = createMaterials(pcbTex)
+  const micro = createMicroNormal()
+  const mats = createMaterials(pcbTex, micro)
   const { w, h, r } = BODY
 
-  // ---------- ENCLOSURE (thân vỏ rỗng + mặt trước + chân đế + núm) ----------
+  // ---------- ENCLOSURE: thân vỏ + mặt trước + núm + chân đế (mỗi khối tách riêng khi exploded) ----------
   const enc = new Bucket()
   const bevel = 0.025
   const sleeveShape = roundedRect(w - bevel * 2, h - bevel * 2, r)
@@ -155,32 +209,42 @@ export function buildProceduralSpeaker(): SpeakerBuild {
     bevelEnabled: true,
     bevelThickness: bevel,
     bevelSize: bevel,
-    bevelSegments: 2,
-    curveSegments: 10,
+    bevelSegments: 3,
+    curveSegments: 12,
   })
   sleeve.translate(0, 0, -HALF_D + bevel)
   enc.add('shell', sleeve)
+  const shellGroup = enc.build(mats, 'Shell')
 
+  const fr = new Bucket()
   // Mặt trước lõm nhẹ, có lỗ tròn cho củ loa.
   const frontShape = roundedRect(w - 0.12, h - 0.12, r - 0.05)
   frontShape.holes.push(circlePath(0, -0.2, 0.47))
-  const front = new THREE.ExtrudeGeometry(frontShape, { depth: 0.06, bevelEnabled: false, curveSegments: 10 })
+  const front = new THREE.ExtrudeGeometry(frontShape, { depth: 0.06, bevelEnabled: false, curveSegments: 12 })
   front.translate(0, 0, HALF_D - 0.075)
-  enc.add('front', front)
-  // Vòng viền nhôm quanh củ loa.
-  const ring = new THREE.TorusGeometry(0.475, 0.022, 12, 72)
-  enc.add('alu', ring, T(0, -0.2, HALF_D - 0.02))
-  // Đèn trạng thái nhỏ.
-  enc.add('alu', cylZ(0.022, 0.02, 16), T(0, 0.82, HALF_D - 0.01))
-  // Chân đế nhôm.
+  fr.add('front', front)
+  // Vòng viền nhôm quanh củ loa + đèn trạng thái.
+  fr.add('alu', new THREE.TorusGeometry(0.475, 0.022, 16, 96), T(0, -0.2, HALF_D - 0.02))
+  fr.add('alu', cylZ(0.022, 0.02, 16), T(0, 0.82, HALF_D - 0.01))
+  const frontGroup = fr.build(mats, 'Front')
+
+  const kn = new Bucket()
+  kn.add('alu', new THREE.CylinderGeometry(0.19, 0.2, 0.09, 64), T(0, h / 2 + 0.045, -0.22))
+  kn.add('darkAlu', new THREE.TorusGeometry(0.13, 0.008, 8, 48).rotateX(Math.PI / 2), T(0, h / 2 + 0.092, -0.22))
+  const knobGroup = kn.build(mats, 'Knob')
+
+  const pl = new Bucket()
   const plinth = new THREE.ExtrudeGeometry(roundedRect(w - 0.25, BODY.d - 0.25, 0.12), { depth: 0.05, bevelEnabled: false, curveSegments: 8 })
   plinth.rotateX(Math.PI / 2)
-  enc.add('darkAlu', plinth, T(0, -h / 2 - 0.0, 0))
-  // Núm xoay trên đỉnh.
-  const knob = new THREE.CylinderGeometry(0.19, 0.2, 0.09, 64)
-  enc.add('alu', knob, T(0, h / 2 + 0.045, -0.22))
-  enc.add('darkAlu', new THREE.TorusGeometry(0.13, 0.008, 8, 48).rotateX(Math.PI / 2), T(0, h / 2 + 0.092, -0.22))
-  const enclosure = enc.build(mats, 'Enclosure')
+  pl.add('darkAlu', plinth, T(0, -h / 2, 0))
+  const plinthGroup = pl.build(mats, 'Plinth')
+
+  const enclosure = new THREE.Group()
+  enclosure.name = 'Enclosure'
+  enclosure.add(shellGroup, frontGroup, knobGroup, plinthGroup)
+  frontGroup.userData.explode = new THREE.Vector3(...EXPLODE.front)
+  knobGroup.userData.explode = new THREE.Vector3(...EXPLODE.knob)
+  plinthGroup.userData.explode = new THREE.Vector3(...EXPLODE.plinth)
 
   // ---------- BACK PANEL (nắp lưng, tách ra trong cảnh cấu tạo) ----------
   const back = new Bucket()
@@ -239,6 +303,9 @@ export function buildProceduralSpeaker(): SpeakerBuild {
   pc.add('darkAlu', cylZ(0.04, 0.16, 20), T(0.02, -0.68, pz - 0.1))
   pc.add('darkAlu', cylZ(0.065, 0.16, 24), T(0.28, -0.68, pz - 0.1))
   const pcb = pc.build(mats, 'PCB')
+  driver.userData.explode = new THREE.Vector3(...EXPLODE.driver)
+  pcb.userData.explode = new THREE.Vector3(...EXPLODE.pcb)
+  backPanel.userData.explode = new THREE.Vector3(...EXPLODE.backPanel)
 
   // ---------- ĐƯỜNG KÍCH THƯỚC (bản vẽ) ----------
   const dimPts: number[] = []
@@ -258,7 +325,7 @@ export function buildProceduralSpeaker(): SpeakerBuild {
   seg([w / 2, wy - 0.06, HALF_D], [w / 2, wy + 0.06, HALF_D])
   const dimGeo = new THREE.BufferGeometry()
   dimGeo.setAttribute('position', new THREE.Float32BufferAttribute(dimPts, 3))
-  const dims = new THREE.LineSegments(dimGeo, new THREE.LineBasicMaterial({ color: 0xa9c7e8, transparent: true, opacity: 0, depthWrite: false }))
+  const dims = new THREE.LineSegments(withDrawAttributes(dimGeo, 99), createLineMaterial())
   dims.name = 'Dimensions'
 
   const root = new THREE.Group()
@@ -277,12 +344,12 @@ export function buildProceduralSpeaker(): SpeakerBuild {
     driver: mk(driver, 'driver', 0, dy, dz - 0.4),
     port: mk(backPanel, 'port', 0, 0.55, -HALF_D),
     io: mk(backPanel, 'io', 0.02, ioY, -HALF_D),
-    knob: mk(enclosure, 'knob', 0.19, h / 2 + 0.05, -0.22),
+    knob: mk(knobGroup, 'knob', 0.19, h / 2 + 0.05, -0.22),
     amp: mk(pcb, 'amp', 0.18, 0.38, pz - 0.19),
     height: mk(root, 'height', hx, 0.2, bz),
     width: mk(root, 'width', w / 2, wy, 0),
-    body: mk(enclosure, 'body', w / 2, 0.35, 0.1),
-    shell: mk(enclosure, 'shell', w / 2 - 0.06, 0.55, -HALF_D),
+    body: mk(shellGroup, 'body', w / 2, 0.35, 0.1),
+    shell: mk(shellGroup, 'shell', w / 2 - 0.06, 0.55, -HALF_D),
     backPanel: mk(backPanel, 'backPanel', 0, 0, -HALF_D),
   }
 
@@ -297,7 +364,9 @@ export function buildProceduralSpeaker(): SpeakerBuild {
         m.geometry?.dispose()
       })
       Object.values(mats).forEach((m) => m.dispose())
+      ;(dims.material as THREE.Material).dispose()
       pcbTex.dispose()
+      micro.dispose()
     },
   }
 }

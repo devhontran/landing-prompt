@@ -31,15 +31,15 @@ const check = (name, pass, detail = {}) => {
 
 // Trình tự mong đợi: [tiến độ %, chương đang hiển thị, kỳ vọng trạng thái]
 const STORY = [
-  [0, 'hero', (s) => s.sShell > 0.99 && s.lines < 0.01 && Math.abs(s.rotY + 0.42) < 0.02],
+  [0, 'hero', (s) => s.rShell > 0.99 && s.lines < 0.01 && Math.abs(s.rotY + 0.42) < 0.02],
   [14, 'back', (s) => s.rotY > 0.3 && s.rotY < Math.PI],
   [24, 'back', (s) => s.rotY > 2.3 && s.lines < 0.01],
-  [42, 'blueprint', (s) => s.lines > 0.99 && s.sShell < 0.01 && s.dims > 0.99],
-  [47, 'blueprint', (s) => s.grid > 0.99],
-  [63, 'driver', (s) => s.sDriver > 0.99 && s.sPcb < 0.01 && s.sShell < 0.01 && s.explode > 0.99],
-  [75, 'pcb', (s) => s.sPcb > 0.99 && s.sDriver < 0.01 && s.explode > 0.99],
-  [86, 'enclosure', (s) => s.sShell > 0.99 && s.explode < 0.01],
-  [97, 'final', (s) => s.floor > 0.99 && s.lines < 0.01],
+  [42, 'blueprint', (s) => s.lines > 0.99 && s.rShell < 0.01 && s.dims > 0.99 && s.draw > 0.99],
+  [47, 'blueprint', (s) => s.grid > 0.99 && s.warmth < -0.99],
+  [63, 'driver', (s) => s.rDriver > 0.99 && s.rPcb < 0.01 && s.rShell < 0.01 && s.explode > 0.99],
+  [75, 'pcb', (s) => s.rPcb > 0.99 && s.rDriver < 0.01 && s.explode > 0.99],
+  [86, 'enclosure', (s) => s.rShell > 0.99 && s.explode < 0.01],
+  [97, 'final', (s) => s.floor > 0.99 && s.lines < 0.01 && s.pulse > 0.99],
   [100, 'final', (s) => s.floor > 0.99],
 ]
 
@@ -54,7 +54,9 @@ async function scrollToProgress(page, pct) {
     pct,
     { timeout: 15000, polling: 100 },
   )
-  await page.waitForTimeout(250)
+  // Cảnh 3D đuổi theo đích bằng damping/spring → chờ đến khi đứng yên rồi mới đo.
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(r, 200)))))
+  await page.waitForFunction(() => window.__story.settled(), null, { timeout: 60000, polling: 200 })
 }
 
 async function snapshot(page) {
@@ -80,7 +82,7 @@ async function desktopStory(viewport) {
   page.on('pageerror', (e) => errors.push(e.message))
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
   await page.goto(`${BASE}/?debug`, { waitUntil: 'networkidle' })
-  await page.waitForFunction(() => window.__story?.debug?.frame, null, { timeout: 30000 })
+  await page.waitForFunction(() => window.__story?.debug?.frame, null, { timeout: 90000 })
 
   const forward = {}
   let overlapIssues = []
@@ -130,7 +132,7 @@ async function desktopStory(viewport) {
 async function fpsTest() {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
   await page.goto(`${BASE}/?debug`, { waitUntil: 'networkidle' })
-  await page.waitForFunction(() => window.__story?.debug?.frame, null, { timeout: 30000 })
+  await page.waitForFunction(() => window.__story?.debug?.frame, null, { timeout: 90000 })
   await page.mouse.move(700, 450)
   await page.evaluate(() => {
     window.__frames = []
@@ -284,7 +286,7 @@ async function keyboardTest() {
   check('Bàn phím: thứ tự Tab hợp lý, có viền focus', seq[0].text.startsWith('Bỏ qua') && seq.every((s) => s.outline), { seq })
   // Bấm liên kết "Thông số" → cuộn tới đúng cảnh bản vẽ.
   await page.goto(`${BASE}/?debug`, { waitUntil: 'networkidle' })
-  await page.waitForFunction(() => window.__story?.debug?.frame, null, { timeout: 30000 })
+  await page.waitForFunction(() => window.__story?.debug?.frame, null, { timeout: 90000 })
   await page.click('nav a[href="#thong-so"]')
   await page.waitForTimeout(2500)
   const lines = await page.evaluate(() => window.__story.state.lines)

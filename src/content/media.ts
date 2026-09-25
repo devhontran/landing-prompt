@@ -37,7 +37,7 @@ export const sceneImages = {
 export const galleryImages: (Media & { caption: string })[] = [
   { src: v1, caption: 'Mặt trước', alt: 'Loa nhìn thẳng từ phía trước', placeholder: true },
   { src: v2, caption: 'Góc ba phần tư', alt: 'Loa nhìn chéo ba phần tư từ phía trước bên phải', placeholder: true },
-  { src: v3, caption: 'Cạnh bên', alt: 'Cạnh bên của loa với các góc bo tròn', placeholder: true },
+  { src: v3, caption: 'Tách rời', alt: 'Các khối của loa tách rời theo trục: mặt trước, củ loa, vỏ, bo mạch, nắp lưng', placeholder: true },
   { src: v4, caption: 'Mặt sau', alt: 'Mặt sau của loa với cổng kết nối', placeholder: true },
   { src: v5, caption: 'Núm xoay', alt: 'Nhìn từ trên xuống, núm xoay nhôm trên đỉnh loa', placeholder: true },
   { src: v6, caption: 'Củ loa', alt: 'Cận cảnh củ loa và vòng viền nhôm', placeholder: true },

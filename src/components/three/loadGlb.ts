@@ -4,21 +4,26 @@
  *   Anchor_driver, Anchor_port, Anchor_io, Anchor_knob, Anchor_amp,
  *   Anchor_height, Anchor_width, Anchor_body, Anchor_shell   (khuyến nghị; thiếu thì dùng tâm bộ phận)
  * Model nên được chuẩn hóa: gốc tọa độ ở tâm khối loa, trục +Z là mặt trước, cao ≈ 2.3 đơn vị.
- * Hỗ trợ nén Meshopt (EXT_meshopt_compression) và texture WebP (EXT_texture_webp).
+ * Hỗ trợ nén Meshopt (EXT_meshopt_compression), texture KTX2/Basis (KHR_texture_basisu, transcoder ở /basis/)
+ * và WebP (EXT_texture_webp). Khối tách rời (exploded) khai báo bằng extras `explode: [x, y, z]` trên node.
  */
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
+import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js'
+import { createLineMaterial, withDrawAttributes } from './partRig'
 import type { AnchorId } from '@/content/product'
 import type { SpeakerBuild } from './proceduralSpeaker'
 
 const REQUIRED = ['Driver', 'PCB', 'Enclosure', 'BackPanel'] as const
 const ANCHORS: AnchorId[] = ['driver', 'port', 'io', 'knob', 'amp', 'height', 'width', 'body', 'shell', 'backPanel']
 
-export async function loadGlbSpeaker(url: string): Promise<SpeakerBuild> {
+export async function loadGlbSpeaker(url: string, renderer: THREE.WebGLRenderer): Promise<SpeakerBuild> {
+  const ktx2 = new KTX2Loader().setTranscoderPath('/basis/').detectSupport(renderer)
   const loader = new GLTFLoader()
   loader.setMeshoptDecoder(MeshoptDecoder)
-  const gltf = await loader.loadAsync(url)
+  loader.setKTX2Loader(ktx2)
+  const gltf = await loader.loadAsync(url).finally(() => ktx2.dispose())
   const root = gltf.scene
   const find = (name: string) => root.getObjectByName(name)
   const missing = REQUIRED.filter((n) => !find(n))
@@ -51,7 +56,7 @@ export async function loadGlbSpeaker(url: string): Promise<SpeakerBuild> {
   p.push(hx, min.y, min.z, hx, max.y, min.z, min.x, min.y - 0.25, min.z, max.x, min.y - 0.25, min.z)
   const g = new THREE.BufferGeometry()
   g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3))
-  const dims = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0xa9c7e8, transparent: true, opacity: 0, depthWrite: false }))
+  const dims = new THREE.LineSegments(withDrawAttributes(g, 99), createLineMaterial())
   root.add(dims)
   root.position.sub(center)
   const wrapper = new THREE.Group()

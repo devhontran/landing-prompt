@@ -15,6 +15,28 @@ export function Story() {
       <div className="story__sticky">
         <StoryStage />
 
+        {/* Thanh tiến độ chương (chỉ hiện ở chế độ 3D). Điều hướng bàn phím đã có ở header nên ẩn khỏi cây truy cập. */}
+        <div className="story-progress" aria-hidden="true" data-active="0">
+          <div className="story-progress__track">
+            <span className="story-progress__fill" />
+          </div>
+          <ol>
+            {[
+              [chapters.hero.id, 'Giới thiệu'],
+              [chapters.back.id, 'Thiết kế'],
+              [chapters.blueprint.id, 'Thông số'],
+              [chapters.construction.id, 'Cấu tạo'],
+              [chapters.final.id, 'Hoàn thiện'],
+            ].map(([id, label], i) => (
+              <li key={id} style={{ ['--i' as string]: i }}>
+                <a href={`#${id}`} tabIndex={-1}>
+                  <span className="story-progress__num">{String(i).padStart(2, '0')}</span> {label}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </div>
+
         <section className="chapter chapter--hero" data-chapter="hero" id={chapters.hero.id} aria-labelledby="hero-title">
           <div className="chapter__text">
             <p className="eyebrow">

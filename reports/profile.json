@@ -1,0 +1,58 @@
+{
+  "date": "2026-09-25T16:54:09.697Z",
+  "viewport": "1440x900",
+  "scenes": {
+    "hero": {
+      "drawCalls": 24,
+      "commands": 149,
+      "triangles": 12610,
+      "lineAndPointDraws": 1
+    },
+    "back": {
+      "drawCalls": 24,
+      "commands": 149,
+      "triangles": 12610,
+      "lineAndPointDraws": 1
+    },
+    "blueprint": {
+      "drawCalls": 44,
+      "commands": 108,
+      "triangles": 12530,
+      "lineAndPointDraws": 22
+    },
+    "exploded-driver": {
+      "drawCalls": 37,
+      "commands": 143,
+      "triangles": 12530,
+      "lineAndPointDraws": 15
+    },
+    "pcb": {
+      "drawCalls": 38,
+      "commands": 145,
+      "triangles": 12530,
+      "lineAndPointDraws": 16
+    },
+    "final": {
+      "drawCalls": 47,
+      "commands": 289,
+      "triangles": 24198,
+      "lineAndPointDraws": 2
+    }
+  },
+  "budget": {
+    "drawCalls": 100,
+    "triangles": 300000,
+    "payloadMB": 3
+  },
+  "timings": {
+    "stage:build": 105,
+    "stage:env": 278,
+    "stage:compile": 29
+  },
+  "payload": {
+    "jsKB": 1701,
+    "modelKB": 0,
+    "textureKB": 0
+  },
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+}
