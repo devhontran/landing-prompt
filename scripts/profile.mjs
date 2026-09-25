@@ -52,7 +52,7 @@ for (const [name, pct] of scenes) {
   const res = await page.evaluate(
     () =>
       new Promise((resolve) => {
-        const canvas = document.querySelector('.story__canvas canvas')
+        const canvas = document.querySelector('.webgl canvas')
         const spector = new window.SPECTOR.Spector()
         spector.onCapture.add((c) => {
           const draws = c.commands.filter((x) => /^draw(Arrays|Elements)/.test(x.name))
@@ -75,7 +75,7 @@ for (const [name, pct] of scenes) {
 out.timings = await page.evaluate(() => Object.fromEntries(performance.getEntriesByType('measure').filter((m) => m.name.startsWith('stage')).map((m) => [m.name, Math.round(m.duration)])))
 out.payload = { jsKB: Math.round(bytes.js / 1024), modelKB: Math.round(bytes.model / 1024), textureKB: Math.round(bytes.texture / 1024) }
 out.renderer = await page.evaluate(() => {
-  const gl = document.querySelector('.story__canvas canvas').getContext('webgl2')
+  const gl = document.querySelector('.webgl canvas').getContext('webgl2')
   const ext = gl.getExtension('WEBGL_debug_renderer_info')
   return ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : 'unknown'
 })

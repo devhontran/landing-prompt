@@ -34,6 +34,8 @@ const DEFAULT_LAMBDA = 6
 /** Spring cho exploded: hơi thiếu cản (ζ≈0.7) → các khối tách ra có chút nảy cơ khí. */
 const SPRING = { k: 70, c: 11.5 }
 const INTRO_SECONDS = 2.6
+/** Tư thế loa ở phần đặt hàng: chính giữa, giữa hai khối chữ lớn. */
+const BUY_POSE = { fx: 0.5, fy: 0.47, fw: 0.3, fh: 0.62, radius: 1.85, pitch: 0.12, focusY: -0.12 }
 
 const v = new THREE.Vector3()
 const tmp = new THREE.Vector3()
@@ -55,6 +57,8 @@ export class StageController {
   private shared = { uPulse: { value: 0 }, uPulseCenter: { value: new THREE.Vector3(0, -0.2, 0) } }
   private time = 0
   private intro = 0
+  /** Góc xoay bàn xoay ở phần đặt hàng (chỉ cộng dồn khi đang ở đó). */
+  private spin = 0
   private ownsSpeaker: boolean
   /** true: bỏ qua damping và intro (dùng cho trang chụp ảnh tĩnh). */
   snap = false
@@ -154,43 +158,65 @@ export class StageController {
     const drawIntro = THREE.MathUtils.smootherstep(intro, 0, 0.4)
     const scanIntro = THREE.MathUtils.smootherstep(intro, 0.3, 1)
     const introOn = intro < 1
-    const lines = introOn ? 1 : s.lines
+
+    // --- Sau câu chuyện: tan đi (away) khi vào gallery, trở lại ở phần đặt hàng (buy) ---
+    const L = THREE.MathUtils.lerp
+    const away = s.away
+    const buyW = THREE.MathUtils.smootherstep(s.buy, 0, 1)
+    if (buyW > 0.001) this.spin += dt * 0.2 * buyW
+    const shown = Math.max(1 - away, buyW)
+    const reveal = (r: number) => Math.max(Math.min(r, scanIntro, 1 - away), Math.min(buyW, scanIntro))
+    const lines = (introOn ? 1 : s.lines) * (1 - away)
     const draw = Math.min(introOn ? 1 : s.draw, drawIntro)
+    const rotY = s.rotY + this.spin * buyW
+    const B = BUY_POSE
+    const fx = L(s.fx, B.fx, buyW)
+    const fy = L(s.fy, B.fy, buyW)
+    const fw = L(s.fw, B.fw, buyW)
+    const fh = L(s.fh, B.fh, buyW)
+    const radius = L(s.radius, B.radius, buyW)
+    const pitch0 = L(s.pitch, B.pitch, buyW)
+    const floor = Math.max(s.floor * (1 - away), buyW)
+    const dust = Math.max(s.dust * (1 - away), buyW * 0.7)
+    const pulse = Math.max(s.pulse * (1 - away), buyW)
 
     // --- Model ---
     const { speaker, rigs } = this
-    speaker.root.rotation.y = s.rotY
-    for (const e of this.explodables) e.obj.position.copy(e.base).addScaledVector(e.dir, s.explode)
-    rigs.driver.set(Math.min(s.rDriver, scanIntro), lines, draw)
-    rigs.pcb.set(Math.min(s.rPcb, scanIntro), lines, draw)
-    rigs.shell.set(Math.min(s.rShell, scanIntro), lines, draw)
-    rigs.back.set(Math.min(s.rBack, scanIntro), lines, draw)
+    speaker.root.visible = shown > 0.001 || lines > 0.001
+    speaker.root.rotation.y = rotY
+    const explode = s.explode * (1 - buyW)
+    for (const e of this.explodables) e.obj.position.copy(e.base).addScaledVector(e.dir, explode)
+    rigs.driver.set(reveal(s.rDriver), lines, draw)
+    rigs.pcb.set(reveal(s.rPcb), lines, draw)
+    rigs.shell.set(reveal(s.rShell), lines, draw)
+    rigs.back.set(reveal(s.rBack), lines, draw)
     const dimMat = speaker.dims.material as THREE.ShaderMaterial
-    dimMat.uniforms.uOpacity.value = s.dims > 0.001 ? 0.9 : 0
-    dimMat.uniforms.uDraw.value = s.dims
+    const dims = s.dims * (1 - away)
+    dimMat.uniforms.uOpacity.value = dims > 0.001 ? 0.9 : 0
+    dimMat.uniforms.uDraw.value = dims
     dimMat.uniforms.uCut.value = -10
-    speaker.dims.visible = s.dims > 0.002
+    speaker.dims.visible = dims > 0.002
 
     // --- Sàn, rung màng loa, không khí ---
     const dpr = gl.getPixelRatio()
-    const floorOn = s.floor > 0.002
+    const floorOn = floor > 0.002
     this.floor.mesh.visible = floorOn
     const fu = this.floor.material.uniforms
-    fu.uOpacity.value = s.floor
+    fu.uOpacity.value = floor
     fu.uTime.value = this.time
-    fu.uPulse.value = s.pulse
+    fu.uPulse.value = pulse
     // Màng loa chuyển động cùng pha với gợn sóng tại tâm (ph = -t·2.6).
-    this.shared.uPulse.value = s.pulse * Math.sin(-this.time * 2.6)
+    this.shared.uPulse.value = pulse * Math.sin(-this.time * 2.6)
     if (floorOn) this.floor.mesh.getRenderTarget().setSize(Math.round((W * dpr) / 2), Math.round((H * dpr) / 2))
-    this.atmosphere.set(s.dust, this.time, dpr)
+    this.atmosphere.set(dust, this.time, dpr)
 
     // --- Camera: khối cầu bao (radius) vừa vùng khung, dịch bằng view offset; parallax con trỏ ---
     const halfFov = THREE.MathUtils.degToRad(cam.fov / 2)
-    const t = Math.min(Math.tan(halfFov) * s.fh, Math.tan(halfFov) * (W / H) * s.fw)
-    const dist = (s.radius * Math.sqrt(1 + t * t)) / t
-    focusW.set(s.focusX, s.focusY, s.focusZ).applyEuler(euler.set(0, s.rotY, 0))
+    const t = Math.min(Math.tan(halfFov) * fh, Math.tan(halfFov) * (W / H) * fw)
+    const dist = (radius * Math.sqrt(1 + t * t)) / t
+    focusW.set(L(s.focusX, 0, buyW), L(s.focusY, B.focusY, buyW), L(s.focusZ, 0, buyW)).applyEuler(euler.set(0, rotY, 0))
     const yaw = this.pointer.x * 0.06
-    const pitch = s.pitch + this.pointer.y * 0.035
+    const pitch = pitch0 + this.pointer.y * 0.035
     cam.position.set(
       focusW.x + Math.sin(yaw) * Math.cos(pitch) * dist,
       focusW.y + Math.sin(pitch) * dist,
@@ -199,20 +225,21 @@ export class StageController {
     cam.lookAt(focusW)
     cam.near = Math.max(0.1, dist - 7)
     cam.far = dist + 12
-    cam.setViewOffset(W, H, (0.5 - s.fx) * W, (0.5 - s.fy) * H, W, H)
+    cam.setViewOffset(W, H, (0.5 - fx) * W, (0.5 - fy) * H, W, H)
     cam.updateProjectionMatrix()
     cam.updateMatrixWorld()
     speaker.root.updateMatrixWorld(true)
 
-    // --- Nền ---
+    // --- Nền: dùng chung cho toàn trang; quầng sáng mờ đi ở gallery, sáng lại ở phần đặt hàng ---
     const bu = this.backdrop.material.uniforms
     bu.uRes.value.set(W * dpr, H * dpr)
     bu.uDpr.value = dpr
-    bu.uCenter.value.set(s.fx, 1 - s.fy)
-    bu.uWarmth.value = s.warmth
-    bu.uGrid.value = s.grid
+    bu.uCenter.value.set(fx, 1 - fy)
+    bu.uWarmth.value = L(s.warmth, 1, Math.max(away, buyW))
+    bu.uGlow.value = Math.max(L(1, 0.35, away), buyW)
+    bu.uGrid.value = s.grid * (1 - away)
 
-    return moving || introOn || floorOn || s.dust > 0.002
+    return moving || introOn || (shown > 0.01 && (floorOn || dust > 0.002 || buyW > 0.001))
   }
 
   /** Chiếu các neo chú thích (và khung bao model nếu cần) ra tọa độ màn hình. */

@@ -46,6 +46,10 @@ export type StoryState = {
   floor: number
   dust: number
   pulse: number
+  /** Sau câu chuyện (điều khiển bởi trigger riêng, không thuộc timeline chính):
+   *  away: loa tan đi khi gallery tiến vào; buy: loa trở lại ở phần đặt hàng. */
+  away: number
+  buy: number
 }
 
 export const initialState = (): StoryState => ({
@@ -72,6 +76,8 @@ export const initialState = (): StoryState => ({
   floor: 0,
   dust: 1,
   pulse: 0,
+  away: 0,
+  buy: 0,
 })
 
 /** Vùng khung cho từng cảnh — đồng bộ với bố cục chữ trong globals.css. */

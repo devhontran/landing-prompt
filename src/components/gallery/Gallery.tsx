@@ -4,7 +4,10 @@ import { getImageProps } from 'next/image'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { galleryImages } from '@/content/media'
 import { useExperienceMode } from '../StoryStage'
-import { COPIES, PATTERN, STEP, wrapX } from './layout'
+import { COPIES, STEP } from './layout'
+
+/** Quãng trượt ngang (đơn vị chiều cao vùng xem) khi cuộn qua section được ghim. */
+const TRAVEL = 2.2
 
 const items = galleryImages.map((g) => ({
   ...g,
@@ -21,10 +24,9 @@ export function Gallery() {
   const mode = useExperienceMode()
   const gl = mode === '3d'
   const viewportRef = useRef<HTMLDivElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
   const cursorRef = useRef<HTMLDivElement>(null)
   const tilesRef = useRef<HTMLLIElement[]>([])
-  const engine = useRef({ target: 0, current: 0, nudge: (d: number) => void d })
+  const engine = useRef({ nudge: (d: number) => void d })
   const [glFailed, setGlFailed] = useState(false)
 
   const step = useCallback(
@@ -44,156 +46,132 @@ export function Gallery() {
   useEffect(() => {
     if (!gl) return
     const vp = viewportRef.current!
-    const canvas = canvasRef.current!
+    const section = vp.closest<HTMLElement>('.gallery')!
     const tiles = tilesRef.current.slice(0, items.length * COPIES)
     const firstImgs = tiles.slice(0, items.length).map((li) => li.querySelector('img')!)
-    let H = 1
-    let raf = 0
-    let running = false
-    let visible = false
-    let last = 0
-    let prev = 0
-    let vel = 0
     let disposed = false
-    let glLayer: import('./galleryGL').GalleryGL | null = null
-    const e = engine.current
-    const dragging = { on: false, x: 0, t: 0, v: 0, id: -1, moved: 0 }
+    let cleanup: (() => void) | null = null
 
-    const layout = () => {
-      H = vp.clientHeight
-      tiles.forEach((li, k) => {
-        const s = PATTERN[k % PATTERN.length]
-        li.style.width = `${s.w * H}px`
-        li.style.height = `${s.h * H}px`
-      })
-      glLayer?.resize(vp.clientWidth, H)
-    }
-
-    const frame = (t: number) => {
-      const dt = Math.min(0.05, (t - (last || t)) / 1000) || 1 / 60
-      last = t
-      e.current += (e.target - e.current) * (1 - Math.exp(-dt * 10))
-      const inst = (e.current - prev) / dt
-      prev = e.current
-      vel += (inst - vel) * 0.2
-      const rects = tiles.map((li, k) => {
-        const s = PATTERN[k % PATTERN.length]
-        const x = wrapX(s.x, Math.floor(k / PATTERN.length), e.current) * H
-        const y = s.y * H
-        li.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`
-        return { x, y, w: s.w * H, h: s.h * H, imageIndex: k % items.length }
-      })
-      const shaderVel = Math.max(-1, Math.min(1, vel * 0.45))
-      glLayer?.render(rects, shaderVel)
-      const settled = !dragging.on && Math.abs(e.target - e.current) < 1e-4 && Math.abs(vel) < 0.002
-      if (settled || !visible) {
-        running = false
-        last = 0
-        vel = 0
-        glLayer?.render(rects, 0)
-        return
-      }
-      raf = requestAnimationFrame(frame)
-    }
-    const kick = () => {
-      if (running || !visible) return
-      running = true
-      raf = requestAnimationFrame(frame)
-    }
-    e.nudge = (d: number) => {
-      e.target += d
-      kick()
-    }
-
+    // Bắt đầu tải ảnh khi section sắp vào màn hình.
     const io = new IntersectionObserver(
       ([entry]) => {
-        visible = entry.isIntersecting
-        if (visible) {
-          firstImgs.forEach((img) => (img.loading = 'eager'))
-          kick()
-        }
+        if (!entry.isIntersecting) return
+        firstImgs.forEach((img) => (img.loading = 'eager'))
+        io.disconnect()
       },
-      { rootMargin: '400px 0px' },
+      { rootMargin: '100% 0px' },
     )
-    io.observe(vp)
+    io.observe(section)
 
-    import('./galleryGL')
-      .then(({ GalleryGL }) => {
+    Promise.all([import('./galleryGL'), import('gsap'), import('gsap/ScrollTrigger'), import('../webgl/bus')])
+      .then(([{ GalleryLayer }, { gsap }, { ScrollTrigger }, { bus, addLayer }]) => {
         if (disposed) return
-        try {
-          glLayer = new GalleryGL(canvas, firstImgs, tiles.length)
-          layout()
-          glLayer.loadTextures(() => {
-            vp.dataset.glReady = 'true'
-            kick()
-            if (!running) frame(performance.now())
+        gsap.registerPlugin(ScrollTrigger)
+        const layer = new GalleryLayer(vp, tiles, firstImgs)
+        layer.pointer = bus.pointer
+        layer.onTexturesReady = () => {
+          vp.dataset.glReady = 'true'
+          bus.invalidate()
+        }
+        const removeLayer = addLayer(layer)
+        engine.current.nudge = (d: number) => {
+          layer.target += d
+          bus.invalidate()
+        }
+
+        // Ghim section: cuộn dọc đẩy ảnh trượt ngang; tiêu đề trôi chậm hơn (parallax). Ô hiện bằng mặt quét khi section tiến vào.
+        const heading = section.querySelector('.gallery__head .t-display')
+        const trig: { pin?: { progress: number }; reveal?: { progress: number } } = {}
+        const ctx = gsap.context(() => {
+          trig.pin = ScrollTrigger.create({
+            trigger: section,
+            start: 'top top',
+            end: '+=160%',
+            pin: true,
+            scrub: true,
+            refreshPriority: 1,
+            onUpdate: (st) => {
+              layer.scroll = -st.progress * TRAVEL
+              bus.invalidate()
+            },
           })
-        } catch {
-          setGlFailed(true)
+          trig.reveal = ScrollTrigger.create({
+            trigger: section,
+            start: 'top 85%',
+            end: 'top 5%',
+            scrub: true,
+            onUpdate: (st) => {
+              layer.reveal = st.progress
+              bus.invalidate()
+            },
+          })
+          if (heading)
+            gsap.fromTo(heading, { xPercent: 0 }, { xPercent: -10, ease: 'none', scrollTrigger: { trigger: section, start: 'top top', end: '+=160%', scrub: true } })
+        })
+        ScrollTrigger.refresh()
+        layer.scroll = -(trig.pin?.progress ?? 0) * TRAVEL
+        layer.current = layer.scroll
+        layer.reveal = trig.reveal?.progress ?? 0
+
+        // Kéo bằng chuột, có quán tính khi thả.
+        const dragging = { on: false, x: 0, t: 0, v: 0, id: -1 }
+        const onDown = (ev: PointerEvent) => {
+          if (ev.button !== 0) return
+          dragging.on = true
+          dragging.x = ev.clientX
+          dragging.t = ev.timeStamp
+          dragging.v = 0
+          dragging.id = ev.pointerId
+          vp.setPointerCapture(ev.pointerId)
+          vp.dataset.dragging = 'true'
+        }
+        const onMove = (ev: PointerEvent) => {
+          if (!dragging.on || ev.pointerId !== dragging.id) return
+          const H = vp.clientHeight
+          const dx = ev.clientX - dragging.x
+          const dt = Math.max(1, ev.timeStamp - dragging.t) / 1000
+          dragging.v = dragging.v * 0.6 + (dx / H / dt) * 0.4
+          dragging.x = ev.clientX
+          dragging.t = ev.timeStamp
+          layer.target += dx / H
+          bus.invalidate()
+        }
+        const onUp = (ev: PointerEvent) => {
+          if (!dragging.on || ev.pointerId !== dragging.id) return
+          dragging.on = false
+          delete vp.dataset.dragging
+          if (ev.timeStamp - dragging.t < 80) layer.target += Math.max(-2, Math.min(2, dragging.v * 0.3))
+          bus.invalidate()
+        }
+        vp.addEventListener('pointerdown', onDown)
+        vp.addEventListener('pointermove', onMove)
+        vp.addEventListener('pointerup', onUp)
+        vp.addEventListener('pointercancel', onUp)
+        const ro = new ResizeObserver(() => {
+          layer.layout()
+          bus.invalidate()
+        })
+        ro.observe(vp)
+        if (new URLSearchParams(location.search).has('debug')) Object.assign(window, { __gallery: layer })
+
+        cleanup = () => {
+          ctx.revert()
+          removeLayer()
+          layer.dispose()
+          ro.disconnect()
+          vp.removeEventListener('pointerdown', onDown)
+          vp.removeEventListener('pointermove', onMove)
+          vp.removeEventListener('pointerup', onUp)
+          vp.removeEventListener('pointercancel', onUp)
+          delete vp.dataset.glReady
         }
       })
       .catch(() => setGlFailed(true))
 
-    const onDown = (ev: PointerEvent) => {
-      if (ev.button !== 0) return
-      dragging.on = true
-      dragging.x = ev.clientX
-      dragging.t = ev.timeStamp
-      dragging.v = 0
-      dragging.moved = 0
-      dragging.id = ev.pointerId
-      vp.setPointerCapture(ev.pointerId)
-      vp.dataset.dragging = 'true'
-      kick()
-    }
-    const onMove = (ev: PointerEvent) => {
-      if (!dragging.on || ev.pointerId !== dragging.id) return
-      const dx = ev.clientX - dragging.x
-      const dt = Math.max(1, ev.timeStamp - dragging.t) / 1000
-      dragging.v = dragging.v * 0.6 + (dx / H / dt) * 0.4
-      dragging.x = ev.clientX
-      dragging.t = ev.timeStamp
-      dragging.moved += Math.abs(dx)
-      e.target += dx / H
-      kick()
-    }
-    const onUp = (ev: PointerEvent) => {
-      if (!dragging.on || ev.pointerId !== dragging.id) return
-      dragging.on = false
-      delete vp.dataset.dragging
-      // Quán tính: tiếp tục trượt theo vận tốc lúc thả.
-      if (ev.timeStamp - dragging.t < 80) e.target += Math.max(-2, Math.min(2, dragging.v * 0.3))
-      kick()
-    }
-    vp.addEventListener('pointerdown', onDown)
-    vp.addEventListener('pointermove', onMove)
-    vp.addEventListener('pointerup', onUp)
-    vp.addEventListener('pointercancel', onUp)
-    const ro = new ResizeObserver(() => {
-      layout()
-      frame(performance.now())
-    })
-    ro.observe(vp)
-    layout()
-    frame(performance.now())
-
-    if (new URLSearchParams(location.search).has('debug')) Object.assign(window, { __gallery: e })
-
     return () => {
       disposed = true
-      cancelAnimationFrame(raf)
       io.disconnect()
-      ro.disconnect()
-      vp.removeEventListener('pointerdown', onDown)
-      vp.removeEventListener('pointermove', onMove)
-      vp.removeEventListener('pointerup', onUp)
-      vp.removeEventListener('pointercancel', onUp)
-      glLayer?.dispose()
-      tiles.forEach((li) => {
-        li.style.transform = ''
-        li.style.width = ''
-        li.style.height = ''
-      })
+      cleanup?.()
     }
   }, [gl])
 
@@ -268,7 +246,6 @@ export function Gallery() {
         aria-describedby="gallery-hint"
         onKeyDown={onKeyDown}
       >
-        {gl && <canvas ref={canvasRef} className="gallery__canvas" aria-hidden="true" />}
         {gl && (
           <div ref={cursorRef} className="drag-cursor" aria-hidden="true">
             Kéo

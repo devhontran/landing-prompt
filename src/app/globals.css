@@ -356,6 +356,30 @@ a {
    ========================================================================= */
 main {
   display: block;
+  position: relative;
+  z-index: 1;
+}
+/* Canvas WebGL dùng chung, cố định phía sau toàn bộ nội dung (chỉ chế độ 3D). */
+.webgl {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s var(--ease);
+}
+.webgl[data-ready] {
+  opacity: 1;
+}
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
 }
 .story {
   padding-top: var(--header-h);
@@ -701,18 +725,79 @@ dd {
     display: grid;
   }
 
+  /* Gallery được ghim đúng một màn hình: tiêu đề, điều khiển, dải ảnh. */
+  html.js:not([data-mode='static']) .gallery {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: calc(var(--header-h) + 2vh) 0 3vh;
+    overflow: hidden;
+  }
+  html.js:not([data-mode='static']) .gallery__head .t-display {
+    font-size: min(11vw, 19vh);
+  }
+  html.js:not([data-mode='static']) .gallery__controls {
+    padding: 2vh var(--margin) 2.5vh;
+  }
+  html.js:not([data-mode='static']) .gallery__viewport.is-gl {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+    margin: 0 0 3vh;
+  }
+
+  /* Đặt hàng: loa ở giữa (canvas), hai nửa tên sản phẩm đứng hai bên, CTA tròn phía dưới. */
+  html.js:not([data-mode='static']) .buy {
+    padding: 0 var(--margin) 16vh;
+  }
+  html.js:not([data-mode='static']) .buy__stage {
+    position: relative;
+    display: block;
+    height: 100vh;
+  }
+  html.js:not([data-mode='static']) .buy__top {
+    position: absolute;
+    top: calc(var(--header-h) + 3vh);
+    left: 0;
+    right: 0;
+  }
+  html.js:not([data-mode='static']) .buy__title {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: -5vh;
+    pointer-events: none;
+  }
+  html.js:not([data-mode='static']) .buy__title.t-display {
+    font-size: min(10.5vw, 21vh);
+  }
+  html.js:not([data-mode='static']) .buy__word {
+    display: inline-block;
+  }
+  html.js:not([data-mode='static']) .buy__media {
+    display: none;
+  }
+  html.js:not([data-mode='static']) .buy__bottom {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 5vh;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: end;
+  }
+  html.js:not([data-mode='static']) .buy__jump {
+    justify-self: end;
+  }
+  html.js:not([data-mode='static']) .site-footer__hint {
+    display: flex;
+  }
+
   .story__stage {
     position: absolute;
     inset: 0;
-  }
-  .story__canvas {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    transition: opacity 1.2s var(--ease);
-  }
-  .story__stage[data-ready] .story__canvas {
-    opacity: 1;
   }
   .story__lines {
     position: absolute;
@@ -1007,25 +1092,43 @@ dd {
 }
 
 /* =========================================================================
-   Đặt hàng + footer
+   Đặt hàng
    ========================================================================= */
 .buy {
-  display: grid;
-  gap: 48px;
-  padding: 16vh var(--margin) 14vh;
+  padding: 14vh var(--margin) 10vh;
 }
-.buy__head .meta {
+.buy__stage {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+.buy__top .meta {
   padding-top: 12px;
   border-top: 1px solid var(--line-strong);
-  margin-bottom: 3vh;
+}
+.buy__title.t-display {
+  font-size: clamp(64px, 20vw, 130px);
+  line-height: 0.8;
+  letter-spacing: -0.07em;
+}
+.buy__word {
+  display: block;
+}
+.buy__word--r {
+  text-align: right;
+}
+.buy__bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 32px;
 }
 .buy__price {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 28px;
 }
-.buy__price .meta__label {
+.buy__label {
   color: var(--muted);
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 11px;
@@ -1036,12 +1139,14 @@ dd {
   font-size: 40px;
   letter-spacing: -0.04em;
 }
-.buy__price .missing {
-  font-size: 15px;
+.buy__jump {
+  text-decoration: none;
+  min-height: 44px;
+  align-items: center;
 }
 .notice {
-  margin-top: 18px;
-  max-width: 40ch;
+  margin-top: 6px;
+  max-width: 34ch;
   color: var(--subtle);
   font-size: 13px;
 }
@@ -1050,63 +1155,177 @@ code {
   font-size: 0.92em;
   color: var(--fg);
 }
-table {
+
+/* CTA tròn có vòng chữ xoay, bị "hút" theo con trỏ */
+.magnetic {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 196px;
+  height: 196px;
+  border-radius: 50%;
+  color: var(--fg);
+  text-decoration: none;
+  translate: var(--mx, 0px) var(--my, 0px);
+  transition: translate 0.7s var(--ease-out);
+}
+.magnetic__ring {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  border-collapse: collapse;
+  height: 100%;
+  fill: var(--muted);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transform-origin: 50% 50%;
+  animation: spin 24s linear infinite;
+  transition: fill 0.4s var(--ease);
+}
+.magnetic__core {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 124px;
+  height: 124px;
+  border-radius: 50%;
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  translate: calc(var(--mx, 0px) * 0.35) calc(var(--my, 0px) * 0.35);
+  transition: translate 0.7s var(--ease-out), scale 0.5s var(--ease-out), background-color 0.3s var(--ease);
+}
+.magnetic:hover .magnetic__core,
+.magnetic[data-near] .magnetic__core {
+  scale: 1.08;
+  background: #fff;
+}
+.magnetic:hover .magnetic__ring,
+.magnetic[data-near] .magnetic__ring {
+  fill: var(--accent);
+}
+.magnetic:focus-visible {
+  border-radius: 50%;
+}
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* Lưới thông số */
+.buy__specs {
+  margin-top: 14vh;
 }
 .buy__specs > .meta {
-  padding: 12px 0 14px;
+  padding: 12px 0 18px;
   border-top: 1px solid var(--line-strong);
 }
-th,
-td {
-  padding: 14px 0;
+.spec-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
   border-top: 1px solid var(--line);
-  font-size: 15px;
-  text-align: left;
-  font-weight: 400;
-  vertical-align: baseline;
+  border-left: 1px solid var(--line);
 }
-th {
-  color: var(--fg);
-  padding-right: 16px;
+.spec-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 150px;
+  padding: 16px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  transition: background-color 0.4s var(--ease);
 }
-td {
-  text-align: right;
+.spec-cell:hover {
+  background: rgb(242 241 238 / 0.035);
 }
-td.spec-sheet__index {
-  width: 44px;
-  text-align: left;
+.spec-cell__index {
   color: var(--accent);
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 11px;
 }
+.spec-cell dt {
+  margin-top: auto;
+  color: var(--fg);
+  font-size: 17px;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+.spec-cell dd {
+  text-align: left;
+}
 @media (min-width: 1024px) {
-  .buy {
+  .buy__stage {
+    display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
     column-gap: var(--gap);
-    row-gap: 10vh;
+    row-gap: 48px;
+    align-items: end;
   }
-  .buy__head {
+  .buy__top {
     grid-column: 1 / -1;
   }
-  .buy__cta {
-    grid-column: 1 / span 5;
+  .buy__title {
+    grid-column: 1 / span 6;
   }
-  .buy__specs {
+  .buy__title.t-display {
+    font-size: clamp(96px, 10vw, 180px);
+  }
+  .buy__media {
     grid-column: 7 / span 6;
+    grid-row: 2 / span 2;
+  }
+  .buy__bottom {
+    grid-column: 1 / span 6;
+  }
+  .spec-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .spec-cell {
+    min-height: 200px;
+    padding: 20px;
   }
 }
 
+/* =========================================================================
+   Footer / lời kết
+   ========================================================================= */
 .site-footer {
+  position: relative;
+  z-index: 1;
   padding: 0 var(--margin);
   border-top: 1px solid var(--line);
   overflow: hidden;
+}
+.outro {
+  display: grid;
+  gap: 5vh;
+  padding: 16vh 0 10vh;
+}
+.outro__head .meta {
+  padding-top: 12px;
+  border-top: 1px solid var(--line-strong);
+}
+.outro__statement.t-display {
+  font-size: clamp(52px, 14vw, 180px);
+}
+.outro__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 .site-footer__row {
   display: grid;
   gap: 16px;
   padding: 22px 0;
+  border-top: 1px solid var(--line);
   align-items: baseline;
 }
 .site-footer__note {
@@ -1114,11 +1333,8 @@ td.spec-sheet__index {
   font-size: 13px;
   max-width: 52ch;
 }
-.site-footer__top {
-  justify-self: start;
-  text-decoration: none;
-  min-height: 44px;
-  align-items: center;
+.site-footer__hint {
+  display: none;
 }
 .site-footer__mark {
   font-size: 19.5vw;
@@ -1127,9 +1343,30 @@ td.spec-sheet__index {
   letter-spacing: -0.07em;
   white-space: nowrap;
   color: var(--fg);
-  margin: 2vw 0 -3.2vw -0.8vw;
+  margin: 1vw 0 -3.2vw -0.8vw;
+}
+.site-footer__mark[data-gl] {
+  color: transparent;
 }
 @media (min-width: 1024px) {
+  .outro {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gap);
+    align-items: end;
+  }
+  .outro__head {
+    grid-column: 1 / -1;
+  }
+  .outro__statement {
+    grid-column: 1 / span 9;
+  }
+  .outro__statement.t-display {
+    font-size: clamp(80px, 8.5vw, 170px);
+  }
+  .outro__links {
+    grid-column: 10 / span 3;
+    justify-content: flex-end;
+  }
   .site-footer__row {
     grid-template-columns: repeat(12, minmax(0, 1fr));
     column-gap: var(--gap);
@@ -1140,7 +1377,7 @@ td.spec-sheet__index {
   .site-footer__note {
     grid-column: 5 / span 5;
   }
-  .site-footer__top {
+  .site-footer__hint {
     grid-column: 11 / span 2;
     justify-self: end;
   }

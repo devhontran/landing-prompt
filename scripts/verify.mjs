@@ -156,7 +156,7 @@ async function fpsTest() {
     return { avgFps: +(f.length / dur).toFixed(1), p95FrameMs: +dts[Math.floor(dts.length * 0.95)].toFixed(1), frames: f.length, seconds: +dur.toFixed(1) }
   })
   const gl = await page.evaluate(() => {
-    const c = document.querySelector('.story__canvas canvas')
+    const c = document.querySelector('.webgl canvas')
     const ctx = c.getContext('webgl2')
     const ext = ctx.getExtension('WEBGL_debug_renderer_info')
     return ext ? ctx.getParameter(ext.UNMASKED_RENDERER_WEBGL) : 'unknown'

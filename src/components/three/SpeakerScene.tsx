@@ -98,7 +98,7 @@ export default function SpeakerScene({ state, modelUrl, onFrame, measureModel, o
         f.time = 0
       }
     }
-    // Còn đang đuổi theo đích → luôn vẽ tiếp; hiệu ứng liên tục (sàn, bụi) chỉ khi phần kể chuyện đang trên màn hình.
+    // Còn đang đuổi theo đích, hoặc có hiệu ứng theo thời gian (sàn, bụi, loa xoay ở phần đặt hàng) → vẽ tiếp.
     if (!controller.settled || (animating && (isActive?.() ?? true))) invalidate()
   })
 

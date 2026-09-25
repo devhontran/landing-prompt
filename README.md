@@ -37,8 +37,10 @@ Công cụ debug: mở `/?debug` để thấy FPS và dữ liệu cảnh (`windo
 | 03 Cấu tạo | **Exploded view**: 6 khối tách theo trục bằng spring; lần lượt **củ loa → bo mạch → vỏ loa** được "in" vật liệu, camera tiến về đúng bộ phận, các khối khác giữ nét; cuối cùng lắp lại | Mỗi bộ phận một ảnh + chú thích vật liệu |
 | 04 Hoàn thiện | Góc thấp chính diện, sàn phản chiếu với sóng âm lan ra làm méo ảnh phản chiếu, màng loa "thở" cùng nhịp; nền ấm trở lại; nút Mua ngay | Ảnh + nút Mua ngay |
 | Thanh tiến độ | Dải mảnh ở chân màn hình, tô màu theo cuộn, sáng chương hiện tại | — |
-| Thư viện | Grid ngẫu hứng lặp vô hạn, kéo có quán tính, parallax trong khung + uốn theo vận tốc kéo | Dải cuộn ngang gốc (scroll-snap) |
-| Đặt hàng | Giá, bảng thông số, nút Mua ngay lớn | như desktop |
+| Chuyển sang thư viện | Loa "tan" xuống bằng mặt quét khi gallery tiến vào; nền và ánh sáng giữ nguyên (cùng một canvas) | — |
+| 05 Thư viện | Section được ghim: cuộn dọc đẩy dải ảnh trượt ngang (cộng thêm kéo chuột có quán tính), tiêu đề trôi parallax; ô hiện bằng mặt quét, uốn theo vận tốc, phóng quanh con trỏ; con trỏ "Kéo" | Dải cuộn ngang gốc (scroll-snap) |
+| 06 Đặt hàng | Loa được "in" lại giữa màn hình, xoay bàn xoay trên sàn sóng âm; tên sản phẩm tách đôi mở ra hai bên; CTA tròn có vòng chữ xoay, hút theo con trỏ; lưới 8 ô thông số | Xếp dọc: tên, ảnh, giá, CTA tròn, lưới 2 cột |
+| 07 Lời kết | "Cảm ơn đã lắng nghe." + wordmark cỡ lớn vẽ bằng WebGL: hiện từ nét viền sang chữ đặc bằng mặt quét, di chuột tạo sóng âm lan trên chữ, nhịp loa phát sóng đều | Wordmark DOM tĩnh |
 
 Chữ vào theo từng cảnh: tiêu đề được "lau" từ dưới lên (clip-path) cùng nhịp mặt quét, phần còn lại hiện dần theo thứ tự; khi đã hiện thì giữ nguyên, đủ lâu để đọc.
 
@@ -52,6 +54,8 @@ Chữ vào theo từng cảnh: tiêu đề được "lau" từ dưới lên (cli
 - **Chi tiết tương tác**: nút viên thuốc có biểu tượng tròn xoay khi hover, nav dạng capsule, con trỏ "Kéo" bám theo chuột trong gallery, thanh tiến độ chương có bộ đếm phần trăm.
 
 ## Kiến trúc cảnh 3D
+
+**Một canvas WebGL dùng chung cho cả trang** (`.webgl`, cố định phía sau nội dung): vòng render thủ công vẽ cảnh loa (camera phối cảnh), rồi lần lượt các lớp 2D đăng ký qua `webgl/bus.ts` — gallery và wordmark footer — bằng camera trực giao theo pixel cửa sổ, căn theo vị trí phần tử DOM mỗi frame. Nhờ vậy toàn trang chung một nền, một ánh sáng, một motif (mặt quét có mép sáng ấm). Cuộn mượt bằng **Lenis** chạy trên ticker của GSAP để ScrollTrigger, canvas và DOM cùng nhịp (chỉ ở chế độ 3D).
 
 Một cảnh, một không khí ánh sáng (studio tối, một softbox), bảng màu hạn chế: than chì · champagne ấm · xanh bản vẽ.
 Mọi chuyển động đi qua damping (lerp theo thời gian) hoặc spring, không bao giờ nhảy cóc.

@@ -5,7 +5,10 @@
  * nên mobile / giảm chuyển động không bao giờ tải three.js, R3F hay GSAP.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { createPortal } from 'react-dom'
+import { Canvas, useFrame, type RootState } from '@react-three/fiber'
+import Lenis from 'lenis'
+import { bus } from '../webgl/bus'
 import * as THREE from 'three'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -25,6 +28,27 @@ const COLS = {
 }
 const LABEL_GAP = 14
 
+/**
+ * Vòng render thủ công (priority 1): cảnh loa phối cảnh trước, sau đó các lớp 2D dùng chung canvas
+ * (gallery, wordmark footer). Một canvas, một bối cảnh ánh sáng cho toàn trang.
+ */
+function renderFrame({ gl, scene, camera, size, invalidate }: RootState, dt: number) {
+  gl.autoClear = false
+  gl.clear()
+  gl.render(scene, camera)
+  bus.time += dt
+  let animating = false
+  for (const layer of bus.layers) {
+    gl.clearDepth()
+    animating = layer.render(gl, size.width, size.height, dt) || animating
+  }
+  if (animating) invalidate()
+}
+function RenderLoop() {
+  useFrame(renderFrame, 1)
+  return null
+}
+
 type LabelBox = { el: HTMLElement; line: SVGGElement | null; anchor: AnchorId; side: 'left' | 'right'; w: number; h: number }
 
 export default function StoryGL() {
@@ -32,7 +56,6 @@ export default function StoryGL() {
   const svgRef = useRef<SVGSVGElement>(null)
   const state = useMemo(() => initialState(), [])
   const invalidateRef = useRef<() => void>(() => {})
-  const activeRef = useRef(true)
   const labelsRef = useRef<LabelBox[]>([])
   const partLinesRef = useRef<{ g: SVGGElement; anchor: AnchorId; text: HTMLElement }[]>([])
   const [ready, setReady] = useState(false)
@@ -54,7 +77,9 @@ export default function StoryGL() {
   useEffect(() => {
     const onMove = (e: PointerEvent) => {
       controllerRef.current?.setPointer((e.clientX / window.innerWidth) * 2 - 1, (e.clientY / window.innerHeight) * 2 - 1)
-      if (activeRef.current) invalidateRef.current()
+      bus.pointer.x = e.clientX
+      bus.pointer.y = e.clientY
+      invalidateRef.current()
     }
     window.addEventListener('pointermove', onMove, { passive: true })
     return () => window.removeEventListener('pointermove', onMove)
@@ -66,6 +91,18 @@ export default function StoryGL() {
     const story = stage?.closest<HTMLElement>('.story')
     if (!stage || !story) return
     document.documentElement.classList.add('is-3d-ready')
+
+    // Cuộn mượt toàn trang (chỉ chế độ 3D): Lenis chạy trên ticker của GSAP để ScrollTrigger, canvas và DOM cùng nhịp.
+    const lenis = new Lenis({ lerp: 0.085, smoothWheel: true, wheelMultiplier: 0.9 })
+    lenis.on('scroll', () => {
+      ScrollTrigger.update()
+      bus.invalidate()
+    })
+    const tick = (time: number) => lenis.raf(time * 1000)
+    gsap.ticker.add(tick)
+    gsap.ticker.lagSmoothing(0)
+    bus.scrollTo = (target, opts) =>
+      lenis.scrollTo(target, { immediate: !!opts?.immediate, duration: 1.8, easing: (t: number) => 1 - Math.pow(1 - t, 4) })
 
     const ctx = gsap.context(() => {
       const tl = buildStateTimeline(gsap, state)
@@ -117,17 +154,34 @@ export default function StoryGL() {
         // Timeline bám thẳng vị trí cuộn (tất định); độ mượt do damping/spring trong cảnh 3D đảm nhiệm.
         scrub: true,
         animation: tl,
+        refreshPriority: 2,
         onUpdate: (self) => updateProgress(self.progress),
-        onToggle: (self) => {
-          activeRef.current = self.isActive
-          invalidateRef.current()
-        },
         onRefresh: () => {
           measureLabels()
           invalidateRef.current()
         },
       })
-      activeRef.current = st.isActive || st.progress === 0
+
+      // Sau câu chuyện: loa "tan" xuống bằng mặt quét khi gallery tiến vào, rồi được "in" lại ở phần đặt hàng.
+      const gallerySec = document.querySelector('.gallery')
+      if (gallerySec)
+        gsap.fromTo(
+          state,
+          { away: 0 },
+          { away: 1, ease: 'none', scrollTrigger: { trigger: gallerySec, start: 'top bottom', end: 'top 25%', scrub: true, onUpdate: () => invalidateRef.current() } },
+        )
+      const buySec = document.querySelector('.buy__stage')
+      if (buySec) {
+        const btl = gsap.timeline({
+          scrollTrigger: { trigger: buySec, start: 'top 80%', end: 'bottom top', scrub: true, onUpdate: () => invalidateRef.current() },
+        })
+        btl.fromTo(state, { buy: 0 }, { buy: 1, duration: 3, ease: 'none' }).to(state, { buy: 1, duration: 3 }).to(state, { buy: 0, duration: 2, ease: 'none' })
+        // Hai nửa tên sản phẩm "mở" ra hai bên khi loa được in lại ở giữa.
+        const wl = buySec.querySelector('.buy__word--l')
+        const wr = buySec.querySelector('.buy__word--r')
+        if (wl) btl.fromTo(wl, { xPercent: 35, opacity: 0 }, { xPercent: 0, opacity: 1, duration: 3, ease: 'power2.out' }, 0)
+        if (wr) btl.fromTo(wr, { xPercent: -35, opacity: 0 }, { xPercent: 0, opacity: 1, duration: 3, ease: 'power2.out' }, 0)
+      }
 
       // Thanh tiến độ chương (chỉ ghi DOM khi chương thay đổi).
       const bar = document.querySelector<HTMLElement>('.story-progress')
@@ -160,7 +214,7 @@ export default function StoryGL() {
         const t = markFor[id]
         if (t === undefined) return false
         const y = st.start + ((st.end - st.start) * t) / tl.duration()
-        window.scrollTo({ top: y, behavior: smooth ? 'smooth' : 'auto' })
+        bus.scrollTo(y, { immediate: !smooth })
         const heading = story.querySelector<HTMLElement>(`#${id} h1, #${id} h2, #${id} h3`)
         heading?.focus({ preventScroll: true })
         return true
@@ -169,10 +223,19 @@ export default function StoryGL() {
         const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[href^="#"]')
         if (!a) return
         const id = a.getAttribute('href')!.slice(1)
+        if (a.classList.contains('skip-link')) return
         if (scrollToMark(id, true)) {
           e.preventDefault()
           history.replaceState(null, '', `#${id}`)
+          return
         }
+        // Các neo còn lại (thư viện, đặt hàng, lên đầu trang): cuộn mượt bằng Lenis rồi chuyển focus.
+        const target = document.getElementById(id)
+        if (!target) return
+        e.preventDefault()
+        bus.scrollTo(target)
+        history.replaceState(null, '', `#${id}`)
+        target.querySelector<HTMLElement>('h1, h2, h3')?.focus({ preventScroll: true })
       }
       document.addEventListener('click', onClick)
       if (location.hash) requestAnimationFrame(() => scrollToMark(location.hash.slice(1), false))
@@ -215,6 +278,8 @@ export default function StoryGL() {
 
     return () => {
       ctx.revert()
+      gsap.ticker.remove(tick)
+      lenis.destroy()
       document.documentElement.classList.remove('is-3d-ready')
     }
   }, [state, debug])
@@ -297,40 +362,43 @@ export default function StoryGL() {
 
   return (
     <div ref={stageRef} className="story__stage" data-ready={ready || undefined}>
-      <div className="story__canvas">
-        <Canvas
-          frameloop={hidden ? 'never' : 'demand'}
-          dpr={dpr}
-          flat={false}
-          gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
-          camera={{ fov: 26, near: 0.1, far: 100, position: [0, 0, 10] }}
-          onCreated={({ gl, invalidate }) => {
-            // Đặt tường minh: sRGB + ACES (không dựa vào mặc định).
-            gl.outputColorSpace = THREE.SRGBColorSpace
-            gl.toneMapping = THREE.ACESFilmicToneMapping
-            gl.toneMappingExposure = 1
-            gl.setClearColor(0x0a0a0b, 1)
-            invalidateRef.current = () => invalidate()
-          }}
-          aria-hidden="true"
-        >
-          <SpeakerScene
-            state={state}
-            modelUrl={model.url}
-            onFrame={onFrame}
-            measureModel={debug}
-            isActive={() => activeRef.current}
-            onReady={(c) => {
-              controllerRef.current = c
-              setReady(true)
+      {createPortal(
+        <div className="webgl" data-ready={ready || undefined} aria-hidden="true">
+          <Canvas
+            frameloop={hidden ? 'never' : 'demand'}
+            dpr={dpr}
+            flat={false}
+            gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
+            camera={{ fov: 26, near: 0.1, far: 100, position: [0, 0, 10] }}
+            onCreated={({ gl, invalidate }) => {
+              // Đặt tường minh: sRGB + ACES (không dựa vào mặc định).
+              gl.outputColorSpace = THREE.SRGBColorSpace
+              gl.toneMapping = THREE.ACESFilmicToneMapping
+              gl.toneMappingExposure = 1
+              gl.setClearColor(0x0b0b0c, 1)
+              invalidateRef.current = () => invalidate()
+              bus.invalidate = () => invalidate()
             }}
-            onLowFps={() => {
-              setDpr((d) => Math.min(d, 1.5))
-              if (debug) debugRef.current.dpr = 1.5
-            }}
-          />
-        </Canvas>
-      </div>
+          >
+            <SpeakerScene
+              state={state}
+              modelUrl={model.url}
+              onFrame={onFrame}
+              measureModel={debug}
+              onReady={(c) => {
+                controllerRef.current = c
+                setReady(true)
+              }}
+              onLowFps={() => {
+                setDpr((d) => Math.min(d, 1.5))
+                if (debug) debugRef.current.dpr = 1.5
+              }}
+            />
+            <RenderLoop />
+          </Canvas>
+        </div>,
+        document.body,
+      )}
       <svg ref={svgRef} className="story__lines" aria-hidden="true">
         {specs.map((s) => (
           <g key={s.id} data-line={s.id} style={{ opacity: 0 }}>
