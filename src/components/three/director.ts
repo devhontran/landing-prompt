@@ -1,117 +1,132 @@
 /**
- * ĐẠO DIỄN CUỘN (chỉ chế độ 3D): Lenis (cuộn mượt) + GSAP ScrollTrigger + cảnh three.js.
- * - Mỗi frame: đọc vị trí các "sân khấu" DOM → chọn cảnh + pose → rig nội suy → cập nhật chú thích exploded.
- *   Trạng thái chỉ phụ thuộc vị trí cuộn (cuộn ngược cho kết quả y hệt).
- * - ScrollTrigger (scrub): tab hero thu vào logo nav, vạch thông số chạy trái → phải, parallax phòng nghe.
- * - Preloader ~2.5s: model xoay + bộ đếm 0→100%, panel trắng thu về đúng vị trí tab hero.
- * Mọi tween dùng một easing: cubic-bezier(0.7, 0, 0.3, 1).
+ * ĐẠO DIỄN CUỘN (chỉ chế độ 3D): Lenis (cuộn mượt) + GSAP ScrollTrigger + cảnh 3D kể chuyện.
+ *
+ * Cảnh 3D (StageController + storyState) là một câu chuyện liên tục trên timeline 0–100:
+ *   hero (mặt trước) → quay ra mặt sau → bản vẽ kỹ thuật (nét tự vẽ, kích thước, lưới)
+ *   → tách rời, soi lần lượt củ loa → bo mạch → vỏ loa → lắp lại → chân dung trên sàn phản chiếu.
+ * Mỗi "sân khấu" DOM của layout (hero, khối tuyên ngôn, section cấu tạo ghim, khung phiên bản) giữ một đoạn timeline;
+ * vị trí cuộn trong sân khấu → thời điểm timeline, khung hình (fx, fy, fw, fh) lấy từ hình chữ nhật DOM
+ * → model luôn khớp bố cục và TRƯỢT giữa các vị trí khi chuyển section (damping trong StageController).
+ * Trạng thái chỉ phụ thuộc vị trí cuộn → cuộn ngược cho kết quả y hệt.
+ * Section không có 3D (thông số, vật liệu, …): model "tan" bằng mặt quét, canvas ẩn và ngừng vẽ.
  */
 import * as THREE from 'three'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { CustomEase } from 'gsap/CustomEase'
 import Lenis from 'lenis'
-import { layers, type FinishKey, type LayerPart } from '@/content/site'
+import { callouts, type FinishKey } from '@/content/site'
 import { clamp01 } from '@/lib/ease'
 import { bus } from '../webgl/bus'
-import { Rig, type Pose, type StageKey } from './rig'
+import { StageController, type FrameInfo } from './stageController'
+import { buildStateTimeline, initialState } from './storyState'
 
 gsap.registerPlugin(ScrollTrigger, CustomEase)
 const EASE = CustomEase.create('likova', 'M0,0 C0.7,0 0.3,1 1,1')
 const lerp = THREE.MathUtils.lerp
 const PRELOAD_MIN = 2.5
 
-type Stage = { key: StageKey; el: HTMLElement; pose: (r: DOMRect, vw: number, vh: number) => Pose }
+export type StageKey = 'hero' | 'statement' | 'exploded' | 'finish'
+type Frame = { fx: number; fy: number; fw: number; fh: number }
+type Stage = {
+  key: StageKey
+  el: HTMLElement
+  /** Tiến độ 0..1 trong sân khấu và khung hình theo hình chữ nhật DOM. */
+  pose: (r: DOMRect, vw: number, vh: number) => { p: number; frame: Frame }
+  /** Đoạn timeline câu chuyện mà sân khấu này giữ. */
+  t: [number, number]
+}
 
 export class Director {
-  rig: Rig
+  ctl: StageController
+  /** Trạng thái ĐÍCH (timeline + khung DOM); StageController đuổi theo bằng damping/spring. */
+  state = initialState()
+  /** Sân khấu đang giữ model (null = model tan đi). */
+  shown: StageKey | null = null
+  /** Thời điểm hiện tại trên timeline câu chuyện (0–100). */
+  t = 0
+  private tl: gsap.core.Timeline
   private lenis: Lenis
   private ctx: gsap.Context
   private stages: Stage[] = []
-  private callouts: { part: LayerPart; label: HTMLElement; line: SVGLineElement }[] = []
+  private labels: {
+    id: string
+    anchor: (typeof callouts)[number]['anchor']
+    at: readonly [number, number]
+    el: HTMLElement
+    line: SVGLineElement
+  }[] = []
   private sticky: HTMLElement | null
   private html = document.documentElement
   private loaded: boolean
   private progress = 0
-  private v = new THREE.Vector3()
+  private info: FrameInfo | null = null
   private cleanup: (() => void)[] = []
 
   constructor(
     public gl: THREE.WebGLRenderer,
-    scene: THREE.Scene,
-    camera: THREE.PerspectiveCamera,
+    private scene: THREE.Scene,
+    private camera: THREE.PerspectiveCamera,
     private invalidate: () => void,
     private canvasWrap: HTMLElement,
   ) {
-    this.rig = new Rig(gl, scene, camera)
+    this.ctl = new StageController()
+    scene.add(this.ctl.root)
+    const detachEnv = this.ctl.attachEnvironment(gl, scene)
+    this.cleanup.push(detachEnv)
+    this.tl = buildStateTimeline(gsap, this.state)
     this.loaded = this.html.hasAttribute('data-loaded')
     const q = <T extends Element = HTMLElement>(s: string) => document.querySelector<T>(s)
 
     // ---- Sân khấu ----
-    const add = (key: StageKey, sel: string, pose: Stage['pose']) => {
+    const add = (key: StageKey, sel: string, t: [number, number], pose: Stage['pose']) => {
       const el = q(sel)
-      if (el) this.stages.push({ key, el, pose })
+      if (el) this.stages.push({ key, el, t, pose })
     }
     const hero = q('.hero')
-    add('hero', '.hero__sticky', (r, _vw, vh) => {
-      const hr = hero!.getBoundingClientRect()
-      const p = clamp01(-hr.top / Math.max(1, hr.height - vh))
-      // Dolly-in: model lớn dần, xoay dần về chính diện. r.top < 0 khi sticky đã nhả → model trôi lên cùng trang.
-      return {
-        cx: lerp(0.3, 0.36, p),
-        cy: lerp(0.57, 0.64, p) + Math.min(0, r.top) / vh,
-        hf: lerp(0.66, 0.98, p),
-        rotY: lerp(-0.6, -0.12, p),
-        rotX: lerp(0.02, 0.1, p),
-        explode: 0,
-      }
-    })
-    add('statement', '.statement__stage', (r, vw, vh) => {
-      const p = clamp01((vh - r.top) / (vh + r.height))
-      return {
-        cx: (r.left + r.width / 2) / vw,
-        cy: (r.top + r.height / 2) / vh,
-        hf: (r.height / vh) * 0.95,
-        rotY: lerp(-0.95, 0.95, p),
-        rotX: lerp(0.12, -0.12, p),
-        explode: 0,
-      }
-    })
     const exploded = q('.exploded')
     this.sticky = q('.exploded__sticky')
-    add('exploded', '.exploded__sticky', (r, vw, vh) => {
+    const through = (r: DOMRect, vh: number) => clamp01((vh - r.top) / (vh + r.height))
+    // Hero: model ở phần ba bên trái (dưới tab), dolly-in và bắt đầu quay khi cuộn.
+    add('hero', '.hero__sticky', [0, 12], (r, _vw, vh) => {
+      const hr = hero!.getBoundingClientRect()
+      const p = clamp01(-hr.top / Math.max(1, hr.height - vh))
+      return { p, frame: { fx: lerp(0.3, 0.34, p), fy: 0.58 + r.top / vh, fw: 0.36, fh: lerp(0.62, 0.82, p) } }
+    })
+    // Tuyên ngôn: loa quay hẳn ra mặt sau (cổng thoát hơi, cổng kết nối) trong khung dưới câu tuyên ngôn.
+    add('statement', '.statement__stage', [12, 26], (r, vw, vh) => ({
+      p: through(r, vh),
+      frame: {
+        fx: (r.left + r.width / 2) / vw,
+        fy: (r.top + r.height / 2) / vh,
+        fw: Math.min(0.5, (r.width / vw) * 0.6),
+        fh: (r.height / vh) * 0.95,
+      },
+    }))
+    // Cấu tạo (ghim): bản vẽ kỹ thuật → tách rời, soi từng bộ phận → lắp lại.
+    add('exploded', '.exploded__sticky', [26, 88], (r, _vw, vh) => {
       const er = exploded!.getBoundingClientRect()
-      const p = clamp01(-er.top / Math.max(1, er.height - vh))
-      return {
-        cx: 0.58,
-        cy: (r.top + vh * 0.56) / vh,
-        hf: 0.58,
-        rotY: lerp(-0.9, -0.66, p),
-        rotX: 0.05,
-        explode: clamp01((p - 0.04) / 0.82),
-      }
+      return { p: clamp01(-er.top / Math.max(1, er.height - vh)), frame: { fx: 0.53, fy: (r.top + vh * 0.56) / vh, fw: 0.4, fh: 0.7 } }
     })
-    add('finish', '.finish__stage', (r, vw, vh) => {
-      const p = clamp01((vh - r.top) / (vh + r.height))
-      const h = Math.min(r.height, vh * 0.86)
-      return {
-        cx: (r.left + r.width / 2) / vw,
-        cy: (r.top + r.height / 2) / vh,
-        hf: (h / vh) * 0.92,
-        rotY: lerp(-0.75, 0.25, p),
-        rotX: 0.04,
-        explode: 0,
-      }
-    })
-    for (const l of layers) {
-      const label = q(`[data-callout="${l.part}"]`)
-      const line = q<SVGLineElement>(`[data-line="${l.part}"]`)
-      if (label && line) this.callouts.push({ part: l.part, label, line })
+    // Phiên bản: chân dung góc thấp trên sàn phản chiếu, màng loa "thở".
+    add('finish', '.finish__stage', [88, 100], (r, vw, vh) => ({
+      p: clamp01(through(r, vh) * 1.8),
+      frame: {
+        fx: (r.left + r.width / 2) / vw,
+        fy: (r.top + r.height / 2) / vh,
+        fw: (r.width / vw) * 0.7,
+        fh: (Math.min(r.height, vh * 0.86) / vh) * 0.8,
+      },
+    }))
+    for (const c of callouts) {
+      const el = q(`[data-callout="${c.id}"]`)
+      const line = q<SVGLineElement>(`[data-line="${c.id}"]`)
+      if (el && line) this.labels.push({ id: c.id, anchor: c.anchor, at: c.at, el, line })
     }
 
     // ---- Cuộn mượt ----
     this.lenis = new Lenis({ autoRaf: false, anchors: true, lerp: 0.1 })
-    const raf = (t: number) => this.lenis.raf(t * 1000)
+    const raf = (time: number) => this.lenis.raf(time * 1000)
     gsap.ticker.add(raf)
     gsap.ticker.lagSmoothing(0)
     this.lenis.on('scroll', () => {
@@ -122,31 +137,39 @@ export class Director {
     bus.invalidate = invalidate
     bus.scrollTo = (target, opts) => this.lenis.scrollTo(target, { immediate: opts?.immediate })
 
-    // ---- Phiên bản ----
+    // ---- Phiên bản, con trỏ, resize ----
     const onFinish = (e: Event) => {
-      this.rig.setFinish((e as CustomEvent<FinishKey>).detail)
+      this.ctl.setFinish((e as CustomEvent<FinishKey>).detail)
       this.invalidate()
     }
     window.addEventListener('speaker:finish', onFinish)
     this.cleanup.push(() => window.removeEventListener('speaker:finish', onFinish))
+    // Parallax con trỏ rất nhẹ (±3°): gợi chiều sâu, camera vẫn do cuộn quyết định.
+    const onMove = (e: PointerEvent) => {
+      this.ctl.setPointer((e.clientX / window.innerWidth) * 2 - 1, (e.clientY / window.innerHeight) * 2 - 1)
+      if (this.shown) this.invalidate()
+    }
+    window.addEventListener('pointermove', onMove, { passive: true })
+    this.cleanup.push(() => window.removeEventListener('pointermove', onMove))
     const onResize = () => this.invalidate()
     window.addEventListener('resize', onResize)
     this.cleanup.push(() => window.removeEventListener('resize', onResize))
 
-    // ---- ScrollTrigger ----
+    // ---- ScrollTrigger (DOM) ----
     this.ctx = gsap.context(() => this.scrollEffects(hero))
 
-    // ---- Preloader ----
+    // ---- Preloader: intro của cảnh (nét tự vẽ → mặt quét "in" vật liệu) chạy trong lúc đếm ----
     if (this.loaded) {
-      this.rig.want(this.pick())
-      this.rig.snap()
+      this.target()
+      this.ctl.snap = true
+      this.ctl.update(this.state, camera, gl, window.innerWidth, window.innerHeight, 0)
+      this.ctl.snap = false
     } else {
       this.lenis.stop()
-      this.rig.want('preload', { cx: 0.68, cy: 0.44, hf: 0.6, rotY: -0.5, rotX: 0.06, explode: 0 })
+      Object.assign(this.state, { fx: 0.66, fy: 0.44, fw: 0.34, fh: 0.5 })
       this.html.dataset.scene = 'ready'
-      // Biên dịch shader trước để frame đầu không khựng.
       const done = () => (this.progress = 1)
-      gl.compileAsync(scene, camera).then(done, done)
+      gl.compileAsync(this.ctl.root, camera, scene).then(done, done)
     }
     this.html.dataset.tab = 'hero'
   }
@@ -199,38 +222,50 @@ export class Director {
     }
   }
 
-  /** Cảnh cần hiển thị = sân khấu chiếm nhiều nhất dải giữa màn hình (30%–70%). */
-  private pick(): StageKey | null {
+  /** Sân khấu gần tâm màn hình nhất → thời điểm timeline + khung; quá xa mọi sân khấu → model tan đi. */
+  private target() {
     const vw = window.innerWidth
     const vh = window.innerHeight
+    const mid = vh / 2
     let best: Stage | null = null
-    let bestOverlap = 0
-    let bestRect: DOMRect | null = null
+    let bestD = Infinity
+    let bestR: DOMRect | null = null
     for (const st of this.stages) {
       const r = st.el.getBoundingClientRect()
-      const overlap = Math.min(r.bottom, vh * 0.7) - Math.max(r.top, vh * 0.3)
-      if (overlap > bestOverlap) {
+      const d = r.top > mid ? r.top - mid : r.bottom < mid ? mid - r.bottom : 0
+      if (d < bestD) {
         best = st
-        bestOverlap = overlap
-        bestRect = r
+        bestD = d
+        bestR = r
       }
     }
-    if (best && bestRect) Object.assign(this.rig.target, best.pose(bestRect, vw, vh))
-    return best?.key ?? null
+    if (!best || !bestR) return
+    const { p, frame } = best.pose(bestR, vw, vh)
+    this.t = lerp(best.t[0], best.t[1], p)
+    this.tl.time(this.t)
+    Object.assign(this.state, frame)
+    const away = bestD > vh * 0.55
+    this.state.away = away ? 1 : 0
+    this.shown = away ? null : best.key
   }
 
   /** Gọi mỗi frame trước khi vẽ. */
   frame(dt: number) {
-    const rig = this.rig
+    const ctl = this.ctl
+    // Khi panel đang thu về tab, model đã trượt sang vị trí hero (damping).
     if (!this.loaded) this.preloader()
-    else rig.want(this.pick())
-    // Cảnh đang hiển thị khác cảnh mục tiêu: vẫn cập nhật pose cho cảnh đang hiển thị để nó bám DOM khi quét ẩn.
-    let moving = rig.update(dt)
+    if (this.loaded || this.html.dataset.leaving) this.target()
+    const W = window.innerWidth
+    const H = window.innerHeight
+    let moving = ctl.update(this.state, this.camera, this.gl, W, H, dt)
+    this.info = ctl.project(this.camera, W, H, false)
     if (this.loaded) this.updateCallouts()
-    const vis = rig.visible
+    // Canvas ẩn (và ngừng vẽ) khi model đã tan hẳn.
+    const vis = !(this.state.away === 1 && ctl.render.away > 0.995)
     this.canvasWrap.style.visibility = vis ? 'visible' : 'hidden'
-    if (!this.loaded) moving = true
-    if (moving) this.invalidate()
+    if (!this.loaded || !ctl.settled) moving = true
+    // Khi đã ẩn: vẽ nốt cho tới lúc damping hội tụ (trạng thái tất định), sau đó dừng hẳn.
+    if (moving && (vis || !ctl.settled)) this.invalidate()
   }
 
   private preloader() {
@@ -240,7 +275,8 @@ export class Director {
     const shown = Math.min(elapsed / PRELOAD_MIN, this.progress === 1 ? 1 : 0.9)
     const count = document.querySelector('.preloader__count')
     if (count) count.textContent = `${String(Math.round(shown * 100)).padStart(3, '0')}%`
-    if (shown >= 1 && !this.html.dataset.leaving) this.leavePreloader()
+    // Rời preloader khi đủ thời gian VÀ intro của model (nét tự vẽ → quét vật liệu) đã xong.
+    if (shown >= 1 && this.ctl.settled && !this.html.dataset.leaving) this.leavePreloader()
   }
 
   /** Panel trắng thu về đúng vị trí tab hero, nền navy tan ra, model trượt về vị trí hero. */
@@ -256,12 +292,6 @@ export class Director {
       this.lenis.start()
       ScrollTrigger.refresh()
       this.invalidate()
-    }
-    // Model chuyển sang pose hero ngay (damp mượt, không cần quét).
-    const heroStage = this.stages.find((s) => s.key === 'hero')
-    if (heroStage && window.scrollY < 10) {
-      Object.assign(this.rig.target, heroStage.pose(heroStage.el.getBoundingClientRect(), window.innerWidth, window.innerHeight))
-      this.rig.shown = this.rig.wanted = 'hero'
     }
     if (!panel || !tab || window.scrollY > 10) return finish()
     // Chỉ dùng transform + clip-path (không đổi layout → không CLS): panel trượt tới tab, cắt còn cao bằng tab,
@@ -293,34 +323,32 @@ export class Director {
       .to(bg, { opacity: 0, duration: 1, ease: EASE }, 0.2)
   }
 
-  /** Chú thích exploded: nhãn ở cột phải, xếp theo độ cao của bộ phận; vạch 1px nối từ bộ phận tới nhãn. */
+  /** Chú thích: nhãn ở cột phải, xếp theo độ cao điểm neo; vạch 1px nối từ điểm neo tới nhãn. Hiện theo đoạn timeline. */
   private updateCallouts() {
-    if (!this.sticky || !this.callouts.length) return
-    const rig = this.rig
-    const active = rig.shown === 'exploded' && rig.reveal > 0.95
+    if (!this.sticky || !this.labels.length || !this.info) return
+    const on = this.shown === 'exploded' && this.ctl.render.away < 0.05
     const sr = this.sticky.getBoundingClientRect()
-    const W = sr.width
-    const vh = window.innerHeight
-    const labelW = this.callouts[0].label.offsetWidth || 240
-    const lx = W - 20 - labelW
-    const items = this.callouts.map((c) => {
-      rig.tower.anchorWorld(c.part, this.v).project(rig.camera)
-      const ax = (this.v.x * 0.5 + 0.5) * window.innerWidth - sr.left
-      const ay = (-this.v.y * 0.5 + 0.5) * vh - sr.top
-      return { c, ax, ay, y: ay, o: active ? clamp01(rig.step(c.part) * 1.6 - 0.1) : 0 }
+    const labelW = this.labels[0].el.offsetWidth || 240
+    const lx = sr.width - 20 - labelW
+    const t = this.t
+    const items = this.labels.map((c) => {
+      const a = this.info!.anchors[c.anchor]
+      const [t0, t1] = c.at
+      const o = on ? Math.min(clamp01((t - t0) / 1.5), clamp01((t1 - t) / 1.5)) : 0
+      return { c, ax: a.x - sr.left, ay: a.y - sr.top, y: 0, o }
     })
-    // Tránh chồng nhãn: sắp theo y, giãn tối thiểu 44px.
-    const sorted = [...items].sort((a, b) => a.ay - b.ay)
+    const vis = items.filter((i) => i.o > 0).sort((a, b) => a.ay - b.ay)
     let prev = -Infinity
-    for (const it of sorted) {
+    for (const it of vis) {
       it.y = Math.max(it.ay, prev + 44, 140)
       prev = it.y
     }
     for (const it of items) {
-      const { label, line } = it.c
-      label.style.opacity = String(it.o)
-      label.style.transform = `translate3d(${lx}px, ${it.y - 12}px, 0)`
+      const { el, line } = it.c
+      el.style.opacity = String(it.o)
       line.style.opacity = String(it.o)
+      if (it.o <= 0) continue
+      el.style.transform = `translate3d(${lx}px, ${it.y - 12}px, 0)`
       line.setAttribute('x1', it.ax.toFixed(1))
       line.setAttribute('y1', it.ay.toFixed(1))
       line.setAttribute('x2', (lx - 8).toFixed(1))
@@ -333,37 +361,23 @@ export class Director {
     this.lenis.scrollTo(y, { immediate: true, force: true })
   }
 
-  /** Kiểm thử: đã đứng yên (cảnh đúng, quét xong, damping hội tụ)? */
+  /** Kiểm thử: cảnh đã đứng yên (damping/spring hội tụ, intro xong)? */
   settled() {
-    const r = this.rig
-    return this.loaded && r.shown === r.wanted && (r.shown === null || r.reveal >= 1) && !r.update(0)
+    return this.loaded && this.ctl.settled
   }
 
-  /** Kiểm thử: hình chữ nhật (px) bao model trên màn hình, null nếu đang ẩn. */
+  /** Kiểm thử: khung bao model trên màn hình (px), null khi model đã tan. */
   modelRect() {
-    const r = this.rig
-    if (!r.visible) return null
-    const box = new THREE.Box3().setFromObject(r.tower.root)
-    const W = window.innerWidth
-    const H = window.innerHeight
-    let [l, t, rr, b] = [Infinity, Infinity, -Infinity, -Infinity]
-    for (let i = 0; i < 8; i++) {
-      this.v.set(i & 1 ? box.max.x : box.min.x, i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z).project(r.camera)
-      const x = (this.v.x * 0.5 + 0.5) * W
-      const y = (-this.v.y * 0.5 + 0.5) * H
-      l = Math.min(l, x)
-      rr = Math.max(rr, x)
-      t = Math.min(t, y)
-      b = Math.max(b, y)
-    }
-    return { left: l, top: t, right: rr, bottom: b }
+    if (!this.shown) return null
+    return this.ctl.project(this.camera, window.innerWidth, window.innerHeight, true).modelRect
   }
 
   dispose() {
     this.ctx.revert()
     this.lenis.destroy()
     this.cleanup.forEach((f) => f())
-    this.rig.dispose()
+    this.scene.remove(this.ctl.root)
+    this.ctl.dispose()
     delete this.html.dataset.scene
     delete this.html.dataset.tab
   }

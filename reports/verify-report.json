@@ -1,6 +1,6 @@
 {
   "base": "http://localhost:3200",
-  "date": "2026-09-25T19:55:01.305Z",
+  "date": "2026-09-26T06:11:45.105Z",
   "checks": [
     {
       "name": "[bảo mật] Header bảo mật",
@@ -27,7 +27,7 @@
     {
       "name": "[3D] Preloader hiện rồi tự kết thúc (~2.5s)",
       "pass": true,
-      "note": "6159ms (gồm tải trang, SwiftShader)"
+      "note": "8096ms (gồm tải trang, SwiftShader)"
     },
     {
       "name": "[3D] Canvas WebGL + model ở hero",
@@ -37,7 +37,7 @@
     {
       "name": "[3D] gioi-thieu:0 → cảnh \"hero\"",
       "pass": true,
-      "note": "shown=hero vis=visible calls=25 tris=11148"
+      "note": "shown=hero vis=visible calls=24 tris=12610"
     },
     {
       "name": "[3D] gioi-thieu:0 model không đè chữ",
@@ -47,7 +47,7 @@
     {
       "name": "[3D] gioi-thieu:0.55 → cảnh \"hero\"",
       "pass": true,
-      "note": "shown=hero vis=visible calls=25 tris=11148"
+      "note": "shown=hero vis=visible calls=24 tris=12610"
     },
     {
       "name": "[3D] gioi-thieu:0.55 model không đè chữ",
@@ -62,7 +62,7 @@
     {
       "name": "[3D] tuyen-ngon:0.45 → cảnh \"statement\"",
       "pass": true,
-      "note": "shown=statement vis=visible calls=1 tris=12"
+      "note": "shown=statement vis=visible calls=23 tris=11842"
     },
     {
       "name": "[3D] tuyen-ngon:0.45 model không đè chữ",
@@ -70,24 +70,29 @@
       "note": "ok"
     },
     {
-      "name": "[3D] Tuyên ngôn: chỉ khối kính gân dọc",
+      "name": "[3D] Tuyên ngôn: loa quay ra mặt sau",
       "pass": true,
-      "note": "Glass"
+      "note": "rotY=2.66"
     },
     {
-      "name": "[3D] cau-tao:0.15 → cảnh \"exploded\"",
+      "name": "[3D] cau-tao:0.22 → cảnh \"exploded\"",
       "pass": true,
-      "note": "shown=exploded vis=visible calls=25 tris=11148"
+      "note": "shown=exploded vis=visible calls=44 tris=12530"
     },
     {
-      "name": "[3D] cau-tao:0.15 model không đè chữ",
+      "name": "[3D] cau-tao:0.22 model không đè chữ",
       "pass": true,
       "note": "ok"
     },
     {
+      "name": "[3D] Cấu tạo — bản vẽ: nét tự vẽ, kích thước, lưới + chú thích kỹ thuật",
+      "pass": true,
+      "note": "t=39.6 lines=1.00 dims=1.00 [height,width,port,io,knob]"
+    },
+    {
       "name": "[3D] cau-tao:0.6 → cảnh \"exploded\"",
       "pass": true,
-      "note": "shown=exploded vis=visible calls=25 tris=11148"
+      "note": "shown=exploded vis=visible calls=37 tris=12530"
     },
     {
       "name": "[3D] cau-tao:0.6 model không đè chữ",
@@ -95,24 +100,39 @@
       "note": "ok"
     },
     {
-      "name": "[3D] Exploded: các lớp tách dần theo cuộn",
+      "name": "[3D] Cấu tạo — tách rời, soi củ loa",
       "pass": true,
-      "note": "0.68"
+      "note": "t=63.2 explode=1.00 [driver]"
     },
     {
-      "name": "[3D] Exploded: chú thích + vạch 1px hiện theo lớp",
+      "name": "[3D] cau-tao:0.75 → cảnh \"exploded\"",
       "pass": true,
-      "note": "1.0 1.0 1.0 1.0 0.5 0.0"
+      "note": "shown=exploded vis=visible calls=48 tris=13738"
+    },
+    {
+      "name": "[3D] cau-tao:0.75 model không đè chữ",
+      "pass": true,
+      "note": "ok"
+    },
+    {
+      "name": "[3D] Cấu tạo — soi bo mạch",
+      "pass": true,
+      "note": "t=72.5 [pcb]"
     },
     {
       "name": "[3D] cau-tao:1 → cảnh \"exploded\"",
       "pass": true,
-      "note": "shown=exploded vis=visible calls=25 tris=11148"
+      "note": "shown=exploded vis=visible calls=22 tris=12530"
     },
     {
       "name": "[3D] cau-tao:1 model không đè chữ",
       "pass": true,
       "note": "ok"
+    },
+    {
+      "name": "[3D] Cấu tạo — lắp lại",
+      "pass": true,
+      "note": "0.00"
     },
     {
       "name": "[3D] thong-so:0.1 → cảnh \"ẩn (canvas tạm dừng)\"",
@@ -127,7 +147,7 @@
     {
       "name": "[3D] phien-ban:0.35 → cảnh \"finish\"",
       "pass": true,
-      "note": "shown=finish vis=visible calls=25 tris=11148"
+      "note": "shown=finish vis=visible calls=27 tris=12692"
     },
     {
       "name": "[3D] phien-ban:0.35 model không đè chữ",
@@ -137,7 +157,7 @@
     {
       "name": "[3D] Chọn phiên bản → vật liệu model đổi (crossfade)",
       "pass": true,
-      "note": "{\"graphite\":0.00007662401642553041,\"silver\":0.9999233759835745,\"walnut\":0}"
+      "note": "{\"graphite\":0,\"silver\":1,\"walnut\":0}"
     },
     {
       "name": "[3D] khong-gian:0.3 → cảnh \"ẩn (canvas tạm dừng)\"",
@@ -162,12 +182,12 @@
     {
       "name": "[3D] Cuộn ngược về cau-tao:0.6: trạng thái y hệt",
       "pass": true,
-      "note": "sai lệch tối đa 7.1e-5"
+      "note": "sai lệch tối đa 0.0e+0"
     },
     {
       "name": "[3D] Cuộn ngược về gioi-thieu:0.55: trạng thái y hệt",
       "pass": true,
-      "note": "sai lệch tối đa 8.5e-5"
+      "note": "sai lệch tối đa 0.0e+0"
     },
     {
       "name": "[3D] Thông số: vạch 1px vẽ dần theo cuộn",
@@ -177,7 +197,7 @@
     {
       "name": "[3D] FPS khi cuộn (SwiftShader, chỉ tham khảo)",
       "pass": true,
-      "note": "3 fps"
+      "note": "13 fps"
     },
     {
       "name": "[desktop 3D] Không bo góc (trừ icon tròn)",
@@ -386,11 +406,11 @@
     }
   ],
   "budget": {
-    "drawCalls": 25,
-    "triangles": 11148
+    "drawCalls": 37,
+    "triangles": 12530
   },
   "fps": {
-    "swiftshader": 3
+    "swiftshader": 13
   },
-  "summary": "77/77 đạt"
+  "summary": "81/81 đạt"
 }

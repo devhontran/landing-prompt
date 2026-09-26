@@ -1001,7 +1001,7 @@ html.lenis body {
 
   /* Exploded: sticky 4 màn hình; chú thích cột phải, nối với từng lớp bằng vạch 1px. */
   html.js:not([data-mode='static']) .exploded {
-    height: 420vh;
+    height: 600vh;
     padding: 0;
   }
   html.js:not([data-mode='static']) .exploded__title {

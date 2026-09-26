@@ -15,7 +15,7 @@ const jobs = [
   { preset: 'statement', w: 1200, h: 900, out: 'src/assets/statement.webp' },
   { preset: 'exploded', w: 1200, h: 1200, out: 'src/assets/exploded.webp' },
   ...['graphite', 'silver', 'walnut'].map((f) => ({ preset: `finish-${f}`, w: 1200, h: 1200, out: `src/assets/finish-${f}.webp` })),
-  ...['aluminium', 'glass', 'walnut'].map((m) => ({ preset: `material-${m}`, w: 1200, h: 900, out: `src/assets/material-${m}.webp` })),
+  ...['aluminium', 'shell', 'walnut'].map((m) => ({ preset: `material-${m}`, w: 1200, h: 900, out: `src/assets/material-${m}.webp` })),
   { preset: 'room', w: 1920, h: 1080, out: 'src/assets/room.webp' },
   { preset: 'hero', w: 1200, h: 630, out: 'src/app/opengraph-image.jpg' },
 ].filter((j) => !only || only.test(j.out))

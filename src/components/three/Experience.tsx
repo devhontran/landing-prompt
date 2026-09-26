@@ -4,7 +4,6 @@ import { useEffect, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import type * as THREE from 'three'
 import { Director } from './director'
-import { CAM_Z, FOV } from './rig'
 
 declare global {
   interface Window {
@@ -44,7 +43,7 @@ export default function Experience() {
         frameloop="demand"
         dpr={[1, 1.75]}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-        camera={{ fov: FOV, near: 0.1, far: 40, position: [0, 0, CAM_Z] }}
+        camera={{ fov: 26, near: 0.1, far: 100, position: [0, 0, 10] }}
       >
         <Scene wrap={wrap} />
       </Canvas>

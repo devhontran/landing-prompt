@@ -1,8 +1,5 @@
 /**
- * Texture thủ tục (canvas 2D → CanvasTexture), nhỏ gọn, không cần tải file:
- * - fluteNormal: gân dọc của kính (normal map, lặp theo trục U).
- * - brushedNormal: vệt phay xước dọc của nhôm.
- * - walnutMap: vân gỗ óc chó (minh hoạ — cần thay bằng texture quét thật khi có).
+ * Vân gỗ óc chó thủ tục (canvas 2D → CanvasTexture) cho phiên bản Walnut — minh hoạ, cần thay bằng texture quét thật.
  */
 import * as THREE from 'three'
 
@@ -22,51 +19,6 @@ function rng(seed: number) {
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296
   }
-}
-
-export function fluteNormal(ribs = 28) {
-  const W = 256
-  const [c, g] = canvas(W, 4)
-  const img = g.createImageData(W, 4)
-  for (let x = 0; x < W; x++) {
-    // Mỗi gân là nửa trụ: pháp tuyến nghiêng theo sin trong một chu kỳ.
-    const u = ((x / W) * ribs) % 1
-    const nx = Math.sin((u - 0.5) * Math.PI) * 0.85
-    const nz = Math.sqrt(1 - nx * nx)
-    for (let y = 0; y < 4; y++) {
-      const i = (y * W + x) * 4
-      img.data[i] = (nx * 0.5 + 0.5) * 255
-      img.data[i + 1] = 128
-      img.data[i + 2] = nz * 255
-      img.data[i + 3] = 255
-    }
-  }
-  g.putImageData(img, 0, 0)
-  const t = new THREE.CanvasTexture(c)
-  t.wrapS = t.wrapT = THREE.RepeatWrapping
-  return t
-}
-
-export function brushedNormal() {
-  const W = 256
-  const H = 256
-  const [c, g] = canvas(W, H)
-  const img = g.createImageData(W, H)
-  const r = rng(7)
-  const cols = Array.from({ length: W }, () => (r() - 0.5) * 0.35)
-  for (let y = 0; y < H; y++)
-    for (let x = 0; x < W; x++) {
-      const nx = cols[x] + (r() - 0.5) * 0.05
-      const i = (y * W + x) * 4
-      img.data[i] = (nx * 0.5 + 0.5) * 255
-      img.data[i + 1] = 128
-      img.data[i + 2] = 250
-      img.data[i + 3] = 255
-    }
-  g.putImageData(img, 0, 0)
-  const t = new THREE.CanvasTexture(c)
-  t.wrapS = t.wrapT = THREE.RepeatWrapping
-  return t
 }
 
 export function walnutMap() {

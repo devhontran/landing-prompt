@@ -1,30 +1,30 @@
 {
-  "date": "2026-09-25T20:01:03.570Z",
+  "date": "2026-09-26T06:18:23.347Z",
   "viewport": "1440x900",
   "scenes": {
     "hero": {
-      "drawCalls": 25,
-      "commands": 161,
-      "triangles": 11148,
-      "lineAndPointDraws": 0
+      "drawCalls": 24,
+      "commands": 128,
+      "triangles": 12610,
+      "lineAndPointDraws": 1
     },
     "statement": {
-      "drawCalls": 1,
-      "commands": 21,
-      "triangles": 12,
-      "lineAndPointDraws": 0
+      "drawCalls": 23,
+      "commands": 126,
+      "triangles": 11842,
+      "lineAndPointDraws": 1
     },
     "exploded": {
-      "drawCalls": 25,
-      "commands": 186,
-      "triangles": 11148,
-      "lineAndPointDraws": 0
+      "drawCalls": 37,
+      "commands": 119,
+      "triangles": 12530,
+      "lineAndPointDraws": 15
     },
     "finish": {
-      "drawCalls": 25,
-      "commands": 146,
-      "triangles": 11148,
-      "lineAndPointDraws": 0
+      "drawCalls": 49,
+      "commands": 274,
+      "triangles": 25222,
+      "lineAndPointDraws": 2
     }
   },
   "budget": {
@@ -32,9 +32,12 @@
     "triangles": 300000,
     "payloadMB": 3
   },
-  "timings": {},
+  "timings": {
+    "stage:build": 95,
+    "stage:env": 31
+  },
   "payload": {
-    "jsKB": 1537,
+    "jsKB": 1561,
     "modelKB": 0,
     "textureKB": 0
   },

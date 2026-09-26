@@ -35,7 +35,8 @@ src/app/globals.css              hệ thống: 4+1 cỡ chữ, lưới 12→6→
 src/content/site.ts              TOÀN BỘ nội dung (null = chưa có dữ liệu → hiện [CẦN CUNG CẤP])
 src/content/media.ts             ảnh tĩnh + alt
 src/components/sections/*        Hero, Statement, Exploded, Specs, Materials, Finish, Room, Partners, Contact, Footer, BookingForm, FinishSelector
-src/components/three/*           tower.ts (model placeholder), textures.ts, rig.ts (cảnh), director.ts (cuộn), Experience.tsx, loadGlb.ts
+src/components/three/*           proceduralSpeaker.ts (model placeholder), partRig.ts (vật liệu ↔ nét bản vẽ), effects.ts (sàn phản chiếu, bụi, lưới),
+                                 stageController.ts (camera + damping/spring), storyState.ts (timeline câu chuyện 0–100), director.ts (cuộn), Experience.tsx
 src/app/api/booking/route.ts     nhận form → webhook phía server
 ```
 
@@ -43,13 +44,13 @@ src/app/api/booking/route.ts     nhận form → webhook phía server
 
 | # | Section | Nền | Desktop 3D | Mobile / giảm chuyển động |
 |---|---|---|---|---|
-| 1 | Preloader ~2.5s | navy | model xoay, panel trắng cắn góc + bộ đếm 000→100%, panel trượt về đúng vị trí tab hero (transform + clip-path, CLS 0) | không có |
-| 2 | Hero | sáng → tối | nav 50px; tab trắng nửa trái chứa wordmark + icon tròn 20px; cuộn → dolly-in model, tab thu nhỏ bay vào logo nav | ảnh tĩnh |
-| 3 | Tuyên ngôn | tối | câu 32px (dòng đầu thụt vào cột 7), khối kính gân dọc lơ lửng xoay theo cuộn | ảnh tĩnh |
-| 4 | Cấu tạo (exploded) | tối | ghim ~3 màn hình: vỏ(+kính) → khung → bass → trung → tweeter → phân tần tách lần lượt; mỗi lớp một vạch 1px + nhãn 11px + số trong vòng 16px | danh sách lớp + ảnh |
+| 1 | Preloader ~2.5s | navy | model được "in" ra: nét bản vẽ tự vẽ rồi mặt quét đi lên phủ vật liệu; panel trắng cắn góc + bộ đếm 000→100%, panel trượt về đúng vị trí tab hero (transform + clip-path, CLS 0) | không có |
+| 2 | Hero | sáng → tối | nav 50px; tab trắng nửa trái chứa wordmark + icon tròn 20px; cuộn → dolly-in, loa bắt đầu quay, tab thu nhỏ bay vào logo nav | ảnh tĩnh |
+| 3 | Tuyên ngôn | tối | câu 32px (dòng đầu thụt vào cột 7); loa trượt xuống khung dưới câu tuyên ngôn và quay hẳn ra mặt sau (cổng thoát hơi, cổng kết nối) | ảnh mặt sau |
+| 4 | Cấu tạo | tối | ghim 5 màn hình: vật liệu tan thành **bản vẽ kỹ thuật** (nét tự vẽ, đường kích thước, lưới) với chú thích chiều cao / rộng × sâu / cổng / núm → **tách rời** (spring), camera tiến lần lượt tới **củ loa → bo mạch → vỏ loa**, bộ phận đang kể hiện vật liệu, phần còn lại giữ nét → lắp lại. Mỗi chú thích: vạch 1px + nhãn 11px + số trong vòng 16px | danh sách chi tiết + ảnh |
 | 5 | Thông số | tối | 3 hàng, mỗi hàng ghim 1 màn hình; vạch 1px vẽ trái → phải theo cuộn; số lớn căn phải (placeholder mờ) | tĩnh |
 | 6 | Vật liệu | sáng #e3e6eb | cặp ảnh 4:3 cách 10px, khung cắn góc 100px | như desktop |
-| 7 | Phiên bản | tối | nút viền 1px cắn góc (30% → 100%); vật liệu model crossfade 0.5s Graphite / Silver / Walnut | ảnh crossfade |
+| 7 | Phiên bản | tối | loa hạ xuống góc thấp trên sàn phản chiếu, màng loa "thở" cùng gợn sóng sàn; nút viền 1px cắn góc (30% → 100%); vỏ crossfade 0.5s Graphite / Silver / Walnut | ảnh crossfade |
 | 8 | Không gian nghe | tối | ảnh full-bleed parallax, tab navy ghi diện tích phòng | không parallax |
 | 9 | Đối tác | sáng | 3 panel navy 453×473, nhãn trên-trái, logo giữa, dấu + dưới-phải | như desktop |
 | 10 | Đặt lịch + footer | tối | wordmark lớn, CTA trắng cắn góc + CTA viền, form gạch chân, footer 11px | như desktop |
@@ -58,10 +59,11 @@ Chuyển động: một easing duy nhất `cubic-bezier(0.7, 0, 0.3, 1)` (CSS, G
 
 ## Kiến trúc 3D
 
-- **Một canvas cố định, nền trong suốt** (`.webgl`): trong preloader nằm trên nội dung, sau đó nằm dưới; section sáng che nó. `frameloop="demand"`: chỉ vẽ khi cuộn / đang chuyển động; ngoài vùng 3D canvas ẩn và **không vẽ frame nào**.
-- **Đạo diễn cuộn** (`director.ts`): mỗi frame đọc vị trí các "sân khấu" DOM (hero, khối kính, exploded, phiên bản) → chọn cảnh + pose (tâm, chiều cao theo tỉ lệ khung nhìn) → model luôn khớp bố cục. Trạng thái chỉ phụ thuộc vị trí cuộn (cuộn ngược → y hệt, sai lệch < 1e-4). Đổi cảnh = mặt phẳng cắt quét ẩn / hiện model.
-- **Cảnh** (`rig.ts`): key ấm `#ffd9a0` trên-phải, rim lạnh `#9fb3ff` thấp, môi trường studio tối (0.3), sương navy, FOV 32, DPR [1, 1.75], không bóng realtime. Vật liệu: nhôm anod hoá (metalness 1, roughness 0.35, normal phay xước), kính gân dọc (transmission + normal map gân), cao su mờ.
-- **Chế độ**: 3D chỉ khi desktop ≥ 1024px, chuột, không giảm chuyển động, có WebGL2, CPU ≥ 4 luồng, không tiết kiệm dữ liệu. Còn lại: ảnh tĩnh, **không tải three.js** (import động). CSS quyết định bố cục ngay từ lần vẽ đầu → không CLS.
+- **Một câu chuyện liên tục** (`storyState.ts`, timeline 0–100, trạng thái đích là hàm thuần của vị trí cuộn): mặt trước → quay 360° một chiều → mặt sau → bản vẽ → tách rời, soi củ loa / bo mạch / vỏ → lắp lại → chân dung trên sàn phản chiếu. `StageController` đuổi theo đích bằng damping (camera chậm, điện ảnh) và spring (tách rời có chút nảy cơ khí).
+- **Gắn với layout LIKOVA** (`director.ts`): mỗi sân khấu DOM (hero, khung tuyên ngôn, section cấu tạo ghim, khung phiên bản) giữ một đoạn timeline; vị trí cuộn trong sân khấu → thời điểm; khung hình camera lấy từ hình chữ nhật DOM → model luôn khớp bố cục và **trượt giữa các vị trí** khi chuyển section. Cuộn ngược → y hệt.
+- **Một canvas cố định, nền trong suốt**: trong preloader nằm trên nội dung, sau đó nằm dưới; section sáng che nó. Section không có 3D (thông số, vật liệu, phòng nghe, đối tác, đặt lịch): model tan bằng mặt quét, canvas ẩn và **không vẽ frame nào**. `frameloop="demand"`.
+- Ánh sáng: key ấm `#ffe2bd` trên-phải, rim lạnh `#9fb3ff` thấp, môi trường studio tối (0.55). Không bóng realtime. FOV 26.
+- **Chế độ**: 3D chỉ khi desktop ≥ 1024px, chuột, không giảm chuyển động, có WebGL2, CPU ≥ 4 luồng, không tiết kiệm dữ liệu. Còn lại: ảnh tĩnh, **không tải three.js**.
 
 ## Bảo mật
 
@@ -75,13 +77,13 @@ Chuyển động: một easing duy nhất `cubic-bezier(0.7, 0, 0.3, 1)` (CSS, G
 Số liệu thô: `reports/verify-report.json`, `reports/lighthouse-summary.json`, `reports/profile.json`. Ảnh: [`docs/screenshots/`](./docs/screenshots).
 
 - `build`, `lint`, `typecheck`: không lỗi.
-- `npm run verify`: **77/77 đạt**.
-- Spector.js (1440×900): hero / exploded / phiên bản **25 draw call, 11.1k tam giác**; khối kính 1 draw call. Model 0 KB (dựng bằng code).
+- `npm run verify`: **81/81 đạt** (gồm từng cảnh của câu chuyện: mặt sau ở tuyên ngôn, bản vẽ + 5 chú thích kỹ thuật, soi củ loa, soi bo mạch, lắp lại).
+- Spector.js (1440×900): hero 24 draw call / 12.6k tam giác; bản vẽ + tách rời 37 / 12.5k; phiên bản (có pass phản chiếu sàn) 49 / 25.2k. Model 0 KB (dựng bằng code).
 
 | Lighthouse (trung vị 3 lần) | Perf | A11y | BP | SEO | LCP | TBT | CLS |
 |---|---|---|---|---|---|---|---|
-| Mobile | 97 | 100 | 100 | 100 | 2.6 s | 40 ms | 0 |
+| Mobile | 97 | 100 | 100 | 100 | 2.6 s | 90 ms | 0 |
 | Desktop, nhánh ảnh tĩnh | 100 | 100 | 100 | 100 | 0.5 s | 0 ms | 0 |
-| Desktop, nhánh 3D | **69** | 100 | 100 | 100 | 0.5 s | 2.96 s | 0 |
+| Desktop, nhánh 3D | **70** | 100 | 100 | 100 | 0.5 s | 1.62 s | 0 |
 
-**Chưa đạt:** mục tiêu desktop Performance ≥ 85 ở nhánh 3D. TBT ~3s đến từ render WebGL bằng CPU (SwiftShader): mỗi frame preloader/chuyển cảnh chặn luồng chính hàng trăm ms, FPS đo được chỉ ~3 fps. Trên GPU thật 25 draw call là rẻ, nhưng **chưa đo được trên máy thật** — cần chạy Lighthouse/FPS trên desktop có GPU để kết luận.
+**Chưa đạt:** mục tiêu desktop Performance ≥ 85 ở nhánh 3D. TBT ~1.6s đến từ render WebGL bằng CPU (SwiftShader): mỗi frame chặn luồng chính hàng chục–trăm ms, FPS khi cuộn chỉ ~13 fps; preloader kéo dài ~8s trong môi trường này. Trên GPU thật 24–49 draw call là rẻ, nhưng **chưa đo được trên máy thật** — cần chạy Lighthouse/FPS trên desktop có GPU để kết luận.

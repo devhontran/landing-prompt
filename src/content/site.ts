@@ -59,19 +59,27 @@ export const hero = {
 
 export const statement = {
   lines: ['Âm thanh được dựng', 'như một công trình: khối vuông vức,', 'vật liệu thật và ánh sáng', 'ấm hắt trên bề mặt.'],
-  body: 'Mặt trước kính gân dọc, thân nhôm và từng đường ghép được xử lý như một mặt tiền. Chi tiết vật liệu cần được xác nhận theo sản phẩm thật.',
+  body: 'Vỏ khối liền, viền nhôm quanh củ loa và từng đường ghép được xử lý như một mặt tiền. Chi tiết vật liệu cần được xác nhận theo sản phẩm thật.',
 }
 
-/** Các lớp của exploded view — theo thứ tự tách ra khi cuộn. `part` khớp với tên node trong model. */
-export const layers = [
-  { part: 'Shell', label: 'Vỏ nhôm' },
-  { part: 'Frame', label: 'Khung' },
-  { part: 'Bass', label: 'Củ bass' },
-  { part: 'Mid', label: 'Củ trung' },
-  { part: 'Tweeter', label: 'Tweeter' },
-  { part: 'Crossover', label: 'Mạch phân tần' },
-] as const
-export type LayerPart = (typeof layers)[number]['part'] | 'Glass'
+/** Điểm neo trên model (tên node `Anchor_*` trong .glb — xem ASSETS_NEEDED.md). */
+export type AnchorId = 'driver' | 'port' | 'io' | 'knob' | 'amp' | 'height' | 'width' | 'body' | 'shell' | 'backPanel'
+
+/**
+ * Chú thích của section cấu tạo (ghim nhiều màn hình). Mỗi chú thích nối vạch 1px tới điểm neo trên model
+ * và chỉ hiện trong khoảng thời gian `at` (đơn vị timeline 0–100, xem storyState.ts):
+ * bản vẽ kỹ thuật (kích thước, cổng) → tách rời, lần lượt củ loa → bo mạch → vỏ loa.
+ */
+export const callouts = [
+  { id: 'height', anchor: 'height', label: 'Chiều cao', at: [31, 52] },
+  { id: 'width', anchor: 'width', label: 'Rộng × sâu', at: [32, 52] },
+  { id: 'port', anchor: 'port', label: 'Cổng thoát hơi', at: [33, 52] },
+  { id: 'io', anchor: 'io', label: 'Cổng kết nối', at: [34, 52] },
+  { id: 'knob', anchor: 'knob', label: 'Núm điều khiển', at: [35, 52] },
+  { id: 'driver', anchor: 'driver', label: 'Củ loa', at: [58, 68] },
+  { id: 'pcb', anchor: 'amp', label: 'Bo mạch khuếch đại', at: [69, 79] },
+  { id: 'enclosure', anchor: 'shell', label: 'Vỏ loa', at: [80, 88] },
+] as const satisfies readonly { id: string; anchor: AnchorId; label: string; at: readonly [number, number] }[]
 
 /** Hàng thông số: đơn vị nằm trong nhãn. value = null → hiển thị khung số mờ + "Cần cung cấp". */
 export const specs = [
@@ -82,7 +90,7 @@ export const specs = [
 
 export const materials = {
   title: ['Vật liệu'],
-  body: 'Nhôm phay xước, kính gân dọc và gỗ óc chó — ba bề mặt hứng ánh sáng theo ba cách khác nhau. Danh sách vật liệu là minh hoạ theo art direction, cần xác nhận với nhà sản xuất.',
+  body: 'Nhôm xước, vỏ phủ mờ và gỗ óc chó — ba bề mặt hứng ánh sáng theo ba cách khác nhau. Danh sách vật liệu là minh hoạ theo art direction, cần xác nhận với nhà sản xuất.',
 }
 
 /** Các phiên bản hoàn thiện (minh hoạ, cần xác nhận). `key` khớp với finishes.ts. */

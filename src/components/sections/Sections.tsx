@@ -1,5 +1,5 @@
 import { images } from '@/content/media'
-import { brand, brandName, catalogueUrl, footer, hero, ids, layers, materials, partners, room, specs, statement } from '@/content/site'
+import { brand, brandName, catalogueUrl, footer, hero, ids, callouts, materials, partners, room, specs, statement } from '@/content/site'
 import { ScenePicture } from '../ScenePicture'
 import { Dot, Lines, Todo } from '../ui/Lines'
 import { FinishSelector } from './FinishSelector'
@@ -65,21 +65,21 @@ export function Exploded() {
   return (
     <section className="section exploded" id={ids.exploded} data-theme="dark" data-3d="exploded" aria-labelledby="exploded-title">
       <div className="exploded__sticky grid">
-        <SectionLabel index="03" label="Cấu tạo" aside={`${String(layers.length).padStart(2, '0')} lớp`} />
+        <SectionLabel index="03" label="Cấu tạo" aside={`${String(callouts.length).padStart(2, '0')} chi tiết`} />
         <h2 id="exploded-title" className="exploded__title statement-type" data-reveal>
           <Lines lines={['Từng lớp,', 'một công trình']} />
         </h2>
         <ol className="callouts">
-          {layers.map((l, i) => (
-            <li className="callout" key={l.part} data-callout={l.part}>
+          {callouts.map((l, i) => (
+            <li className="callout" key={l.id} data-callout={l.id}>
               <span className="num">{i + 1}</span>
               <span>{l.label}</span>
             </li>
           ))}
         </ol>
         <svg className="callout-lines" aria-hidden="true">
-          {layers.map((l) => (
-            <line key={l.part} data-line={l.part} x1="0" y1="0" x2="0" y2="0" />
+          {callouts.map((l) => (
+            <line key={l.id} data-line={l.id} x1="0" y1="0" x2="0" y2="0" />
           ))}
         </svg>
         <ScenePicture media={images.exploded} replaces3d className="exploded__media" sizes="100vw" />
@@ -143,11 +143,11 @@ export function Materials() {
       </h2>
       <div className="materials__pair">
         {[
-          [images.matAluminium, 'Nhôm phay xước'],
-          [images.matGlass, 'Kính gân dọc'],
+          [images.matAluminium, 'Nhôm xước'],
+          [images.matShell, 'Vỏ phủ mờ'],
         ].map(([m, label], i) => (
           <figure key={label as string} className="reveal">
-            <ScenePicture media={m as typeof images.matGlass} className="notch notch--lg" sizes="(min-width: 640px) 50vw, 100vw" />
+            <ScenePicture media={m as typeof images.matShell} className="notch notch--lg" sizes="(min-width: 640px) 50vw, 100vw" />
             <figcaption className="label">
               <span>0{i + 1}</span>
               <span>{label as string}</span>

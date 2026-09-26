@@ -10,7 +10,7 @@ export const IMAGES = {
   'finish-silver': [1200, 1200],
   'finish-walnut': [1200, 1200],
   'material-aluminium': [1200, 900],
-  'material-glass': [1200, 900],
+  'material-shell': [1200, 900],
   'material-walnut': [1200, 900],
   room: [1920, 1080],
 }
